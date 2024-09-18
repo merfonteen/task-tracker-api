@@ -2,7 +2,6 @@ package by.sirius.task.tracker.api.factories;
 
 import by.sirius.task.tracker.api.dto.ProjectDto;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component

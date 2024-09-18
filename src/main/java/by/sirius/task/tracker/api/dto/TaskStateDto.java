@@ -1,7 +1,6 @@
 package by.sirius.task.tracker.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Column;
 import lombok.*;
 
 import java.time.Instant;

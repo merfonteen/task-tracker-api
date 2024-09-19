@@ -189,7 +189,6 @@ public class TaskService {
         optionalNewRightTask
                 .ifPresent(taskRepository::saveAndFlush);
 
-        taskState.getTasks().sort(Comparator.comparing(TaskEntity::getId));
         taskStateRepository.saveAndFlush(taskState);
 
         return taskDtoFactory.makeTaskDto(changeTask);
@@ -202,7 +201,6 @@ public class TaskService {
         serviceHelper.replaceOldTaskPosition(taskToDelete);
 
         TaskStateEntity taskState = taskToDelete.getTaskStateEntity();
-
         taskState.getTasks().remove(taskToDelete);
 
         taskStateRepository.saveAndFlush(taskState);
@@ -210,5 +208,52 @@ public class TaskService {
         taskRepository.delete(taskToDelete);
 
         return AckDto.builder().answer(true).build();
+    }
+
+    public TaskDto changeTaskState(Long taskId, Long newTaskStateId) {
+
+        TaskEntity taskToMove = serviceHelper.getTaskEntityOrThrowException(taskId);
+
+        TaskStateEntity newTaskState = serviceHelper.getTaskStateOrThrowException(newTaskStateId);
+
+        TaskStateEntity currentTaskState = taskToMove.getTaskStateEntity();
+
+        newTaskState.getTasks()
+                .stream()
+                .map(TaskEntity::getName)
+                .filter(taskName -> taskName.equals(taskToMove.getName()))
+                .findAny()
+                .ifPresent(existingTask -> {
+                    throw new BadRequestException(
+                            String.format("Task state \"%s\" already contains  task name \"%s\".",
+                                    newTaskState.getName(), taskToMove.getName()), HttpStatus.BAD_REQUEST);
+                });
+
+        serviceHelper.replaceOldTaskPosition(taskToMove);
+
+        currentTaskState.getTasks().remove(taskToMove);
+
+        Optional<TaskEntity> optionalLastTaskInNewState = newTaskState.getTasks()
+                .stream()
+                .filter(task -> task.getRightTask().isEmpty())
+                .findAny();
+
+        optionalLastTaskInNewState.ifPresent(lastTask -> {
+            lastTask.setRightTask(taskToMove);
+            taskToMove.setLeftTask(lastTask);
+            taskRepository.saveAndFlush(lastTask);
+        });
+
+        taskToMove.setRightTask(null);
+        taskToMove.setTaskStateEntity(newTaskState);
+
+        newTaskState.getTasks().add(taskToMove);
+
+        TaskEntity updatedTask = taskRepository.saveAndFlush(taskToMove);
+
+        taskStateRepository.saveAndFlush(currentTaskState);
+        taskStateRepository.saveAndFlush(newTaskState);
+
+        return taskDtoFactory.makeTaskDto(updatedTask);
     }
 }

@@ -21,6 +21,7 @@ public class TaskController {
     public static final String EDIT_TASK = "/api/tasks/{task_id}";
     public static final String CHANGE_TASK_POSITION = "/api/tasks/{task_id}/position/change";
     public static final String DELETE_TASK = "/api/tasks/{task_id}";
+    public static final String CHANGE_TASK_STATE = "/api/tasks/{task_id}/state/change";
 
     @GetMapping(GET_TASKS)
     public List<TaskDto> getTasks(@PathVariable(name = "task_state_id") Long taskStateId,
@@ -45,15 +46,21 @@ public class TaskController {
 
     @PatchMapping(CHANGE_TASK_POSITION)
     public TaskDto changeTaskPosition(
-            @PathVariable (name="task_id") Long taskId,
+            @PathVariable(name = "task_id") Long taskId,
             @RequestParam(name = "optional_left_task_id", required = false) Optional<Long> leftTaskId) {
         return taskService.changeTaskPosition(taskId, leftTaskId);
     }
-
 
     @DeleteMapping(DELETE_TASK)
     @Transactional
     public AckDto deleteTask(@PathVariable(name = "task_id") Long taskId) {
         return taskService.deleteTask(taskId);
+    }
+
+    @PatchMapping(CHANGE_TASK_STATE)
+    @Transactional
+    public TaskDto changeTaskState(@PathVariable(name = "task_id") Long taskId,
+                                   @RequestParam(name = "new_task_state_id") Long newTaskStateId) {
+        return taskService.changeTaskState(taskId, newTaskStateId);
     }
 }

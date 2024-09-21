@@ -10,12 +10,11 @@ import by.sirius.task.tracker.store.entities.TaskStateEntity;
 import by.sirius.task.tracker.store.repositories.TaskRepository;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import by.sirius.task.tracker.store.services.helpers.ServiceHelper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,6 +42,7 @@ public class TaskService {
                         String.format("Task state with ID \"%d\" not found", taskStateId), HttpStatus.BAD_REQUEST));
     }
 
+    @Transactional
     public TaskDto createTask(Long projectId, Long taskStateId, String taskName) {
 
         if (taskName.isBlank()) {
@@ -84,7 +84,7 @@ public class TaskService {
         return taskDtoFactory.makeTaskDto(task);
     }
 
-
+    @Transactional
     public TaskDto editTask(Long taskId, String taskName) {
 
         if (taskName.isBlank()) {
@@ -194,6 +194,7 @@ public class TaskService {
         return taskDtoFactory.makeTaskDto(changeTask);
     }
 
+    @Transactional
     public AckDto deleteTask(Long taskId) {
 
         TaskEntity taskToDelete = serviceHelper.getTaskEntityOrThrowException(taskId);
@@ -210,6 +211,7 @@ public class TaskService {
         return AckDto.builder().answer(true).build();
     }
 
+    @Transactional
     public TaskDto changeTaskState(Long taskId, Long newTaskStateId) {
 
         TaskEntity taskToMove = serviceHelper.getTaskEntityOrThrowException(taskId);

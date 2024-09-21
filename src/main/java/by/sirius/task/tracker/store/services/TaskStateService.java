@@ -8,6 +8,7 @@ import by.sirius.task.tracker.store.entities.ProjectEntity;
 import by.sirius.task.tracker.store.entities.TaskStateEntity;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import by.sirius.task.tracker.store.services.helpers.ServiceHelper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class TaskStateService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public TaskStateDto createTaskState(Long projectId, String taskStateName) {
 
         if (taskStateName.isBlank()) {
@@ -76,6 +78,7 @@ public class TaskStateService {
         return taskStateDtoFactory.makeTaskStateDto(savedTaskState);
     }
 
+    @Transactional
     public TaskStateDto editTaskState(Long taskStateId, String taskStateName) {
 
         if (taskStateName.isBlank()) {
@@ -184,6 +187,7 @@ public class TaskStateService {
         return taskStateDtoFactory.makeTaskStateDto(changeTaskState);
     }
 
+    @Transactional
     public AckDto deleteTaskState(Long taskStateId) {
 
         TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);

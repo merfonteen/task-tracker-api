@@ -3,7 +3,6 @@ package by.sirius.task.tracker.api.controllers;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;
 import by.sirius.task.tracker.store.services.ProjectService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,19 +27,16 @@ public class ProjectController {
     }
 
     @PostMapping(CREATE_PROJECT)
-    @Transactional
     public ProjectDto createProject(@RequestParam String name) {
        return projectService.createProject(name);
     }
 
     @PatchMapping(EDIT_PROJECT)
-    @Transactional
     public ProjectDto editProject(@PathVariable("project_id") Long projectId, @RequestParam String name) {
         return projectService.editProject(projectId, name);
     }
 
     @DeleteMapping(DELETE_PROJECT)
-    @Transactional
     public AckDto deleteProject(@PathVariable("project_id") Long projectId) {
         return projectService.deleteProject(projectId);
     }

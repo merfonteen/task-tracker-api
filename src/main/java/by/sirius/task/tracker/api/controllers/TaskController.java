@@ -3,7 +3,6 @@ package by.sirius.task.tracker.api.controllers;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskDto;
 import by.sirius.task.tracker.store.services.TaskService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +29,6 @@ public class TaskController {
     }
 
     @PostMapping(CREATE_TASK)
-    @Transactional
     public TaskDto createTask(@PathVariable(name = "task_state_id") Long taskStateId,
                               @PathVariable(name = "project_id") Long projectId,
                               @RequestParam(name = "task_name") String taskName) {
@@ -38,7 +36,6 @@ public class TaskController {
     }
 
     @PatchMapping(EDIT_TASK)
-    @Transactional
     public TaskDto editTask(@PathVariable(name = "task_id") Long taskId,
                             @RequestParam(name = "task_name") String taskName) {
         return taskService.editTask(taskId, taskName);
@@ -52,13 +49,11 @@ public class TaskController {
     }
 
     @DeleteMapping(DELETE_TASK)
-    @Transactional
     public AckDto deleteTask(@PathVariable(name = "task_id") Long taskId) {
         return taskService.deleteTask(taskId);
     }
 
     @PatchMapping(CHANGE_TASK_STATE)
-    @Transactional
     public TaskDto changeTaskState(@PathVariable(name = "task_id") Long taskId,
                                    @RequestParam(name = "new_task_state_id") Long newTaskStateId) {
         return taskService.changeTaskState(taskId, newTaskStateId);

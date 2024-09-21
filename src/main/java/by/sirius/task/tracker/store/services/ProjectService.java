@@ -41,6 +41,7 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public ProjectDto createProject(String name) {
 
         if (name.trim().isEmpty()) {
@@ -62,6 +63,7 @@ public class ProjectService {
         return projectDtoFactory.makeProjectDto(project);
     }
 
+    @Transactional
     public ProjectDto editProject(Long projectId, String name) {
 
         if (name.trim().isEmpty()) {
@@ -83,6 +85,7 @@ public class ProjectService {
         return projectDtoFactory.makeProjectDto(project);
     }
 
+    @Transactional
     public AckDto deleteProject(Long projectId) {
 
         serviceHelper.getProjectOrThrowException(projectId);

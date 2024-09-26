@@ -14,7 +14,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "task_state")
+@Table(name = "task_states")
 public class TaskStateEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

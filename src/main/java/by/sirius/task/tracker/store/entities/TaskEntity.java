@@ -12,7 +12,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "task")
+@Table(name = "tasks")
 public class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

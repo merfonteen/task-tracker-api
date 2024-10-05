@@ -24,6 +24,17 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private List<RoleEntity> roles = new ArrayList<>();
 
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
+    private List<ProjectEntity> ownedProjects = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "project_users",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "project_id")
+    )
+    private List<ProjectEntity> memberProjects  = new ArrayList<>();
+
     public boolean isEnabled() {
         return enabled;
     }

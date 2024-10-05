@@ -1,7 +1,7 @@
 package by.sirius.task.tracker.api.controllers;
 
 import by.sirius.task.tracker.api.dto.AuthRequestDto;
-import by.sirius.task.tracker.store.services.AuthService;
+import by.sirius.task.tracker.api.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

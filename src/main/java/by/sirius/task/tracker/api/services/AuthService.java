@@ -1,4 +1,4 @@
-package by.sirius.task.tracker.store.services;
+package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.api.dto.AuthRequestDto;
 import by.sirius.task.tracker.api.dto.AuthResponseDto;

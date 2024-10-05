@@ -1,15 +1,15 @@
-package by.sirius.task.tracker.store.services;
+package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.factories.TaskDtoFactory;
+import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
 import by.sirius.task.tracker.store.entities.TaskEntity;
 import by.sirius.task.tracker.store.entities.TaskStateEntity;
 import by.sirius.task.tracker.store.repositories.TaskRepository;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
-import by.sirius.task.tracker.store.services.helpers.ServiceHelper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -50,6 +50,7 @@ public class TaskService {
         }
 
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
+
         TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
 
         Optional<TaskEntity> optionalAnotherTask = Optional.empty();

@@ -2,8 +2,9 @@ package by.sirius.task.tracker.api.controllers;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskStateDto;
-import by.sirius.task.tracker.store.services.TaskStateService;
+import by.sirius.task.tracker.api.services.TaskStateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,11 +22,13 @@ public class TaskStateController {
     public static final String CHANGE_TASK_STATE_POSITION = "/api/task-states/{task_state_id}/position/change";
     public static final String DELETE_TASK_STATE = "/api/task-states/{task_state_id}";
 
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
     @GetMapping(GET_TASK_STATES)
     public List<TaskStateDto> getTaskStates(@PathVariable(name = "project_id") Long projectId) {
         return taskStateService.getTaskStates(projectId);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(CREATE_TASK_STATE)
     public TaskStateDto createTaskState(
             @PathVariable(name = "project_id") Long projectId,
@@ -33,6 +36,7 @@ public class TaskStateController {
         return taskStateService.createTaskState(projectId, taskStateName);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping(EDIT_TASK_STATE)
     public TaskStateDto editTaskState(
             @PathVariable(name = "task_state_id") Long taskStateId,
@@ -40,6 +44,7 @@ public class TaskStateController {
         return taskStateService.editTaskState(taskStateId, taskStateName);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PatchMapping(CHANGE_TASK_STATE_POSITION)
     public TaskStateDto changeTaskStatePosition(
             @PathVariable(name = "task_state_id") Long taskStateId,
@@ -47,6 +52,7 @@ public class TaskStateController {
         return taskStateService.changeTaskStatePosition(taskStateId, optionalLeftTaskStateId);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping(DELETE_TASK_STATE)
     public AckDto deleteTaskState(@PathVariable(name = "task_state_id") Long taskStateId) {
         return taskStateService.deleteTaskState(taskStateId);

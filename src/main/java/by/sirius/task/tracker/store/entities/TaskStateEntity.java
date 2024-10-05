@@ -32,6 +32,7 @@ public class TaskStateEntity {
     private Instant createdAt = Instant.now();
 
     @ManyToOne
+    @JoinColumn(name = "project_id", referencedColumnName = "id")
     private ProjectEntity project;
 
     @Builder.Default

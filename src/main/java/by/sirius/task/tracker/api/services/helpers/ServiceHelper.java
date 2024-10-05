@@ -1,4 +1,4 @@
-package by.sirius.task.tracker.store.services.helpers;
+package by.sirius.task.tracker.api.services.helpers;
 
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.store.entities.ProjectEntity;

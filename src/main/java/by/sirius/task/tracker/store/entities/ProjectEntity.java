@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -15,6 +16,7 @@ import java.util.List;
 @Entity
 @Table(name = "projects")
 public class ProjectEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,4 +31,17 @@ public class ProjectEntity {
     @OneToMany
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     private List<TaskStateEntity> taskStates = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "admin_id", referencedColumnName = "id")
+    private UserEntity admin;
+
+    @ManyToMany(mappedBy = "memberProjects", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    private List<UserEntity> users = new ArrayList<>();
+
+    public List<TaskEntity> getAllTasks() {
+        return taskStates.stream()
+                .flatMap(taskState -> taskState.getTasks().stream())
+                .collect(Collectors.toList());
+    }
 }

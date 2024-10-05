@@ -1,4 +1,4 @@
-package by.sirius.task.tracker.store.services;
+package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.store.entities.RoleEntity;
 import by.sirius.task.tracker.store.repositories.RoleRepository;
@@ -14,4 +14,6 @@ public class RoleService {
     public RoleEntity getUserRole() {
         return  roleRepository.findByName("ROLE_USER").get();
     }
+
+    public RoleEntity getAdminRole() {return roleRepository.findByName("ROLE_ADMIN").get(); }
 }

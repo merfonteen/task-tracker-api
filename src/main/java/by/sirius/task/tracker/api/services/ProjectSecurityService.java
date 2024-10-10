@@ -72,7 +72,7 @@ public class ProjectSecurityService {
                 .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
 
         TaskEntity taskEntity = taskRepository.findById(taskId)
-                .orElseThrow(() -> new BadRequestException("Task not found", HttpStatus.BAD_REQUEST));;
+                .orElseThrow(() -> new BadRequestException("Task not found", HttpStatus.BAD_REQUEST));
 
         TaskStateEntity taskState = taskEntity.getTaskStateEntity();
 

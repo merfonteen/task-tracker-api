@@ -5,10 +5,7 @@ import by.sirius.task.tracker.api.dto.InvitationDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.factories.InvitationDtoFactory;
 import by.sirius.task.tracker.store.entities.*;
-import by.sirius.task.tracker.store.repositories.InvitationRepository;
-import by.sirius.task.tracker.store.repositories.ProjectRepository;
-import by.sirius.task.tracker.store.repositories.RoleRepository;
-import by.sirius.task.tracker.store.repositories.UserRepository;
+import by.sirius.task.tracker.store.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +25,7 @@ public class InvitationService {
     private final ProjectRepository projectRepository;
     private final InvitationDtoFactory invitationDtoFactory;
     private final InvitationRepository invitationRepository;
+    private final ProjectRoleRepository projectRoleRepository;
 
     public List<InvitationDto> getUserInvitations(Principal principal) {
 
@@ -86,20 +84,21 @@ public class InvitationService {
         invitation.setStatus(InvitationStatus.ACCEPTED);
 
         UserEntity invitedUser = invitation.getInvitedUser();
-
         ProjectEntity project = invitation.getProject();
-        project.getUsers().add(invitedUser);
 
+        project.getUsers().add(invitedUser);
         invitedUser.getMemberProjects().add(project);
 
-        RoleEntity newRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new BadRequestException("User role not found" , HttpStatus.BAD_REQUEST));
+        RoleEntity roleUser = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new BadRequestException("Role user not found", HttpStatus.BAD_REQUEST));
 
-        if(!invitedUser.getRoles().contains(newRole)) {
-            invitedUser.getRoles().add(newRole);
-        }
+        ProjectRoleEntity projectRole = ProjectRoleEntity.builder()
+                .user(invitedUser)
+                .project(project)
+                .role(roleUser)
+                .build();
 
-        userRepository.save(invitedUser);
+        projectRoleRepository.save(projectRole);
         invitationRepository.save(invitation);
 
         return AckDto.builder().answer(true).build();

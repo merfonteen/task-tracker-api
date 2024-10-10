@@ -23,14 +23,14 @@ public class TaskController {
     public static final String DELETE_TASK = "/api/tasks/{task_id}";
     public static final String CHANGE_TASK_STATE = "/api/tasks/{task_id}/state/change";
 
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
     @GetMapping(GET_TASKS)
-    public List<TaskDto> getTasks(@PathVariable(name = "task_state_id") Long taskStateId,
-                                  @PathVariable(name = "project_id") Long projectId) {
-        return taskService.getTasks(taskStateId, projectId);
+    public List<TaskDto> getTasks(@PathVariable(name = "project_id") Long projectId,
+                                  @PathVariable(name = "task_state_id") Long taskStateId) {
+        return taskService.getTasks(projectId, taskStateId);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @PostMapping(CREATE_TASK)
     public TaskDto createTask(@PathVariable(name = "project_id") Long projectId,
                               @PathVariable(name = "task_state_id") Long taskStateId,
@@ -38,14 +38,14 @@ public class TaskController {
         return taskService.createTask(projectId, taskStateId, taskName);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
     @PatchMapping(EDIT_TASK)
     public TaskDto editTask(@PathVariable(name = "task_id") Long taskId,
                             @RequestParam(name = "task_name") String taskName) {
         return taskService.editTask(taskId, taskName);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
     @PatchMapping(CHANGE_TASK_POSITION)
     public TaskDto changeTaskPosition(
             @PathVariable(name = "task_id") Long taskId,
@@ -53,13 +53,13 @@ public class TaskController {
         return taskService.changeTaskPosition(taskId, leftTaskId);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
     @DeleteMapping(DELETE_TASK)
     public AckDto deleteTask(@PathVariable(name = "task_id") Long taskId) {
         return taskService.deleteTask(taskId);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
     @PatchMapping(CHANGE_TASK_STATE)
     public TaskDto changeTaskState(@PathVariable(name = "task_id") Long taskId,
                                    @RequestParam(name = "new_task_state_id") Long newTaskStateId) {

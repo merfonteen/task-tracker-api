@@ -3,7 +3,9 @@ package by.sirius.task.tracker.api.services;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.InvitationDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
+import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.api.factories.InvitationDtoFactory;
+import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.*;
 import by.sirius.task.tracker.store.repositories.*;
 import jakarta.transaction.Transactional;
@@ -20,19 +22,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InvitationService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final ProjectRepository projectRepository;
     private final InvitationDtoFactory invitationDtoFactory;
     private final InvitationRepository invitationRepository;
     private final ProjectRoleRepository projectRoleRepository;
+
+    private final ServiceHelper serviceHelper;
 
     public List<InvitationDto> getUserInvitations(Principal principal) {
 
        List<InvitationEntity> allInvitations = invitationRepository.findAllByInvitedUser_username(principal.getName());
 
         if(allInvitations.isEmpty()) {
-            throw new BadRequestException("There are no invitations.", HttpStatus.BAD_REQUEST);
+            throw new NotFoundException("There are no invitations.", HttpStatus.NOT_FOUND);
         }
 
         return allInvitations.stream()
@@ -48,14 +49,11 @@ public class InvitationService {
     @Transactional
     public InvitationDto sendInvitation(String invitingAdminUsername, String invitedUsername, Long projectId) {
 
-        UserEntity admin = userRepository.findByUsername(invitingAdminUsername)
-                .orElseThrow(() -> new BadRequestException("Admin not found", HttpStatus.BAD_REQUEST));
+        UserEntity admin = serviceHelper.getUserOrThrowException(invitingAdminUsername);
 
-        UserEntity user = userRepository.findByUsername(invitedUsername)
-                .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
+        UserEntity user = serviceHelper.getUserOrThrowException(invitedUsername);
 
-        ProjectEntity project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new BadRequestException("Project not found", HttpStatus.BAD_REQUEST));
+        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
         Optional<InvitationEntity> existingInvitation = invitationRepository
                 .findByInvitedUserAndProjectAndStatus(user, project, InvitationStatus.SENT);
@@ -78,8 +76,8 @@ public class InvitationService {
 
     @Transactional
     public AckDto acceptInvitation(Long invitationId) {
-        InvitationEntity invitation = invitationRepository.findById(invitationId)
-                .orElseThrow(() -> new BadRequestException("Invitation not found", HttpStatus.BAD_REQUEST));
+
+        InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
 
         invitation.setStatus(InvitationStatus.ACCEPTED);
 
@@ -89,8 +87,7 @@ public class InvitationService {
         project.getUsers().add(invitedUser);
         invitedUser.getMemberProjects().add(project);
 
-        RoleEntity roleUser = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new BadRequestException("Role user not found", HttpStatus.BAD_REQUEST));
+        RoleEntity roleUser = serviceHelper.getUserRoleOrThrowException();
 
         ProjectRoleEntity projectRole = ProjectRoleEntity.builder()
                 .user(invitedUser)
@@ -108,9 +105,8 @@ public class InvitationService {
 
     @Transactional
     public AckDto declineInvitation(Long invitationId) {
-        InvitationEntity invitation = invitationRepository.findById(invitationId)
-                .orElseThrow(() -> new BadRequestException("Invitation not found", HttpStatus.BAD_REQUEST));
 
+        InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
         invitation.setStatus(InvitationStatus.DECLINED);
 
         invitationRepository.save(invitation);

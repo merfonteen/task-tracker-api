@@ -12,28 +12,15 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AdminController {
 
     private final UserService userService;
 
-    private final String GET_USERS = "/users";
-    private final String CHANGE_USER_ROLE = "/users/{username}/change_role";
-    private final String DELETE_USER = "/users/{username}";
+    private final String GET_USERS = "/users/{project_id}";
 
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @GetMapping(GET_USERS)
-    public List<UserDto> getUsers() {
-        return userService.getUsers();
-    }
-
-    @PutMapping(CHANGE_USER_ROLE)
-    public UserDto assignRoleToUser(@PathVariable(name = "username") String username,
-                                    @RequestParam(name = "role") String role) {
-        return userService.assignRole(username, role);
-    }
-
-    @DeleteMapping(DELETE_USER)
-    public AckDto deleteUser(@PathVariable(name = "username") String username) {
-        return userService.deleteUser(username);
+    public List<UserDto> getUsers(@PathVariable("project_id") Long projectId) {
+        return userService.getUsers(projectId);
     }
 }

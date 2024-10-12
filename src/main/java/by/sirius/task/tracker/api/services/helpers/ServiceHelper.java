@@ -1,14 +1,8 @@
 package by.sirius.task.tracker.api.services.helpers;
 
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
-import by.sirius.task.tracker.store.entities.ProjectEntity;
-import by.sirius.task.tracker.store.entities.TaskEntity;
-import by.sirius.task.tracker.store.entities.TaskStateEntity;
-import by.sirius.task.tracker.store.entities.UserEntity;
-import by.sirius.task.tracker.store.repositories.ProjectRepository;
-import by.sirius.task.tracker.store.repositories.TaskRepository;
-import by.sirius.task.tracker.store.repositories.TaskStateRepository;
-import by.sirius.task.tracker.store.repositories.UserRepository;
+import by.sirius.task.tracker.store.entities.*;
+import by.sirius.task.tracker.store.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -20,8 +14,11 @@ import java.util.Optional;
 public class ServiceHelper {
 
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final ProjectRepository projectRepository;
     private final TaskStateRepository taskStateRepository;
+    private final InvitationRepository invitationRepository;
 
     public ProjectEntity getProjectOrThrowException(Long projectId) {
         return projectRepository
@@ -39,12 +36,37 @@ public class ServiceHelper {
                 );
     }
 
-    public TaskEntity getTaskEntityOrThrowException(Long taskId) {
+    public TaskEntity getTaskOrThrowException(Long taskId) {
         return taskRepository
                 .findById(taskId)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Task with \"%d\" id doesn't exist", taskId), HttpStatus.BAD_REQUEST)
                 );
+    }
+
+    public UserEntity getUserOrThrowException(String username) {
+        return userRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found", HttpStatus.NOT_FOUND));
+
+    }
+
+    public RoleEntity getUserRoleOrThrowException() {
+        return roleRepository
+                .findByName("ROLE_USER")
+                .orElseThrow(() -> new NotFoundException("User role not found", HttpStatus.NOT_FOUND));
+    }
+
+    public RoleEntity getAdminRoleOrThrowException() {
+        return roleRepository
+                .findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new NotFoundException("Admin role not found", HttpStatus.NOT_FOUND));
+    }
+
+    public InvitationEntity getInvitationOrThrowException(Long invitationId) {
+        return invitationRepository
+                .findById(invitationId)
+                .orElseThrow(() -> new NotFoundException("Invitation not found", HttpStatus.NOT_FOUND));
     }
 
     public void replaceOldTaskStatePosition(TaskStateEntity changeTaskState) {

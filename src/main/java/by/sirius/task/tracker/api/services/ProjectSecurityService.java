@@ -1,6 +1,7 @@
 package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
+import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.*;
 import by.sirius.task.tracker.store.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -12,20 +13,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ProjectSecurityService {
 
-    private final UserRepository userRepository;
-    private final TaskRepository taskRepository;
-    private final ProjectRepository projectRepository;
-    private final TaskStateRepository taskStateRepository;
+    private final ServiceHelper serviceHelper;
     private final ProjectRoleRepository projectRoleRepository;
 
     public boolean hasProjectPermission(Long projectId, String permissionType) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        UserEntity currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
+        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
 
-        ProjectEntity project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new BadRequestException("Project not found", HttpStatus.BAD_REQUEST));
+        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
         return checkPermissions(permissionType, currentUser, project);
     }
@@ -33,11 +29,9 @@ public class ProjectSecurityService {
     public boolean hasTaskStatePermission(Long taskStateId, String permissionType) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        UserEntity currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
+        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
 
-        TaskStateEntity taskState = taskStateRepository.findById(taskStateId)
-                .orElseThrow(() -> new BadRequestException("Task state not found", HttpStatus.BAD_REQUEST));
+        TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
 
         ProjectEntity project = taskState.getProject();
 
@@ -47,11 +41,9 @@ public class ProjectSecurityService {
     public boolean hasTaskPermission(Long taskId, String permissionType) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        UserEntity currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
+        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
 
-        TaskEntity taskEntity = taskRepository.findById(taskId)
-                .orElseThrow(() -> new BadRequestException("Task not found", HttpStatus.BAD_REQUEST));
+        TaskEntity taskEntity = serviceHelper.getTaskOrThrowException(taskId);
 
         TaskStateEntity taskState = taskEntity.getTaskStateEntity();
 

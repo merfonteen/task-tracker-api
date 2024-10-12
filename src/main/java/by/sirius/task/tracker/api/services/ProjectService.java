@@ -3,6 +3,7 @@ package by.sirius.task.tracker.api.services;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
+import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.api.factories.ProjectDtoFactory;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
@@ -11,7 +12,6 @@ import by.sirius.task.tracker.store.entities.RoleEntity;
 import by.sirius.task.tracker.store.entities.UserEntity;
 import by.sirius.task.tracker.store.repositories.ProjectRepository;
 import by.sirius.task.tracker.store.repositories.ProjectRoleRepository;
-import by.sirius.task.tracker.store.repositories.RoleRepository;
 import by.sirius.task.tracker.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +33,9 @@ import java.util.stream.Stream;
 public class ProjectService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final ProjectRepository projectRepository;
     private final ProjectDtoFactory projectDtoFactory;
     private final ProjectRoleRepository projectRoleRepository;
-
 
     private final ServiceHelper serviceHelper;
 
@@ -70,7 +68,7 @@ public class ProjectService {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UserEntity admin = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> (new BadRequestException("User not found", HttpStatus.BAD_REQUEST)));
+                .orElseThrow(() -> (new NotFoundException("User not found", HttpStatus.BAD_REQUEST)));
 
         ProjectEntity project = projectRepository.saveAndFlush(
                 ProjectEntity.builder()
@@ -119,11 +117,9 @@ public class ProjectService {
     @Transactional
     public AckDto removeUserFromProject(Long projectId, String username) {
 
-        ProjectEntity project = projectRepository.getProjectById(projectId)
-                .orElseThrow(() -> new BadRequestException("Project not found", HttpStatus.BAD_REQUEST));
+        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
-        UserEntity userToDelete = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
+        UserEntity userToDelete = serviceHelper.getUserOrThrowException(username);
 
         project.getUsers().remove(userToDelete);
         userToDelete.getMemberProjects().remove(project);
@@ -132,8 +128,9 @@ public class ProjectService {
         userRepository.save(userToDelete);
 
         if (userToDelete.getMemberProjects().isEmpty()) {
-            RoleEntity userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseThrow(() -> new BadRequestException("Role not found", HttpStatus.BAD_REQUEST));
+
+            RoleEntity userRole = serviceHelper.getUserRoleOrThrowException();
+
             userToDelete.getRoles().remove(userRole);
         }
 
@@ -141,9 +138,7 @@ public class ProjectService {
     }
 
     public ProjectEntity getProjectById(Long projectId) {
-        ProjectEntity project = projectRepository.getProjectById(projectId)
-                .orElseThrow(() -> new BadRequestException("Project not found", HttpStatus.BAD_REQUEST));
-        return project;
+        return serviceHelper.getProjectOrThrowException(projectId);
     }
 
     public boolean isAdmin(UserEntity user, ProjectEntity project) {
@@ -151,8 +146,8 @@ public class ProjectService {
     }
 
     private void assignProjectAdminRole(UserEntity admin, ProjectEntity project) {
-        RoleEntity projectAdminRole = roleRepository.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new BadRequestException("Role ADMIN not found", HttpStatus.BAD_REQUEST));
+
+        RoleEntity projectAdminRole = serviceHelper.getAdminRoleOrThrowException();
 
         ProjectRoleEntity projectRole = ProjectRoleEntity.builder()
                 .user(admin)

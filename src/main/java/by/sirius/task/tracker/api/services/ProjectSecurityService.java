@@ -27,17 +27,7 @@ public class ProjectSecurityService {
         ProjectEntity project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new BadRequestException("Project not found", HttpStatus.BAD_REQUEST));
 
-        ProjectRoleEntity projectUserRole = projectRoleRepository.findByUserAndProject(currentUser, project)
-                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.BAD_REQUEST));
-
-        if (permissionType.equals("WRITE") && projectUserRole.getRole().getName().equals("ROLE_ADMIN")) {
-            return true;
-        }
-        if (permissionType.equals("READ")) {
-            return true;
-        }
-
-        return false;
+        return checkPermissions(permissionType, currentUser, project);
     }
 
     public boolean hasTaskStatePermission(Long taskStateId, String permissionType) {
@@ -51,18 +41,7 @@ public class ProjectSecurityService {
 
         ProjectEntity project = taskState.getProject();
 
-        ProjectRoleEntity projectUserRole = projectRoleRepository.findByUserAndProject(currentUser, project)
-                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.BAD_REQUEST));
-
-        if (permissionType.equals("WRITE") && projectUserRole.getRole().getName().equals("ROLE_ADMIN")) {
-            return true;
-        }
-
-        if (permissionType.equals("READ")) {
-            return true;
-        }
-
-        return false;
+        return checkPermissions(permissionType, currentUser, project);
     }
 
     public boolean hasTaskPermission(Long taskId, String permissionType) {
@@ -78,13 +57,16 @@ public class ProjectSecurityService {
 
         ProjectEntity project = taskState.getProject();
 
+        return checkPermissions(permissionType, currentUser, project);
+    }
+
+    private boolean checkPermissions(String permissionType, UserEntity currentUser, ProjectEntity project) {
         ProjectRoleEntity projectUserRole = projectRoleRepository.findByUserAndProject(currentUser, project)
                 .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.BAD_REQUEST));
 
         if (permissionType.equals("WRITE") && projectUserRole.getRole().getName().equals("ROLE_ADMIN")) {
             return true;
         }
-
         if (permissionType.equals("READ")) {
             return true;
         }

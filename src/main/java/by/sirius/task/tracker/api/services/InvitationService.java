@@ -98,6 +98,8 @@ public class InvitationService {
                 .role(roleUser)
                 .build();
 
+        invitedUser.getRoles().add(roleUser);
+
         projectRoleRepository.save(projectRole);
         invitationRepository.save(invitation);
 
@@ -111,7 +113,7 @@ public class InvitationService {
 
         invitation.setStatus(InvitationStatus.DECLINED);
 
-        invitationRepository.saveAndFlush(invitation);
+        invitationRepository.save(invitation);
 
         return AckDto.builder().answer(true).build();
     }

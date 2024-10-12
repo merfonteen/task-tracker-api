@@ -33,40 +33,38 @@ public class ProjectController {
     public static final String REMOVE_USER_FROM_PROJECT = "/api/projects/{project_id}/users/{username}";
     private static final String SEND_INVITATION_TO_PROJECT = "/api/projects/{project_id}/invitations/send";
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(FETCH_PROJECTS)
     public List<ProjectDto> fetchProjects(
             @RequestParam(value = "prefix_name", required = false) Optional<String> optionalPrefixName) {
        return projectService.fetchProjects(optionalPrefixName);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(CREATE_PROJECT)
     public ProjectDto createProject(@RequestParam("project_name") String name) {
        return projectService.createProject(name);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @PatchMapping(EDIT_PROJECT)
     public ProjectDto editProject(@PathVariable("project_id") Long projectId, @RequestParam String name) {
         return projectService.editProject(projectId, name);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @DeleteMapping(DELETE_PROJECT)
     public AckDto deleteProject(@PathVariable("project_id") Long projectId) {
         return projectService.deleteProject(projectId);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @DeleteMapping(REMOVE_USER_FROM_PROJECT)
     public AckDto removeUserFromProject(@PathVariable("project_id") Long projectId,
-                                        @PathVariable("username") String username,
-                                        Principal principal) {
-        return projectService.removeUserFromProject(projectId, username, principal.getName());
+                                        @PathVariable("username") String username) {
+        return projectService.removeUserFromProject(projectId, username);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(SEND_INVITATION_TO_PROJECT)
     public InvitationDto sendInvitation(@PathVariable("project_id") Long projectId,
                                         @RequestParam("invited_username") String username,

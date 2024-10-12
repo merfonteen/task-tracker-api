@@ -6,13 +6,16 @@ import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.factories.ProjectDtoFactory;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
+import by.sirius.task.tracker.store.entities.ProjectRoleEntity;
 import by.sirius.task.tracker.store.entities.RoleEntity;
 import by.sirius.task.tracker.store.entities.UserEntity;
 import by.sirius.task.tracker.store.repositories.ProjectRepository;
+import by.sirius.task.tracker.store.repositories.ProjectRoleRepository;
 import by.sirius.task.tracker.store.repositories.RoleRepository;
 import by.sirius.task.tracker.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 @Service
 public class ProjectService {
 
@@ -32,6 +36,8 @@ public class ProjectService {
     private final RoleRepository roleRepository;
     private final ProjectRepository projectRepository;
     private final ProjectDtoFactory projectDtoFactory;
+    private final ProjectRoleRepository projectRoleRepository;
+
 
     private final ServiceHelper serviceHelper;
 
@@ -73,6 +79,8 @@ public class ProjectService {
                         .build()
         );
 
+        assignProjectAdminRole(admin, project);
+
         return projectDtoFactory.makeProjectDto(project);
     }
 
@@ -109,14 +117,10 @@ public class ProjectService {
     }
 
     @Transactional
-    public AckDto removeUserFromProject(Long projectId, String username, String adminUsername) {
+    public AckDto removeUserFromProject(Long projectId, String username) {
 
         ProjectEntity project = projectRepository.getProjectById(projectId)
                 .orElseThrow(() -> new BadRequestException("Project not found", HttpStatus.BAD_REQUEST));
-
-        if(!project.getAdmin().getUsername().equals(adminUsername)) {
-            throw new BadRequestException("Only the project admin can remove users", HttpStatus.BAD_REQUEST);
-        }
 
         UserEntity userToDelete = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BadRequestException("User not found", HttpStatus.BAD_REQUEST));
@@ -146,7 +150,16 @@ public class ProjectService {
         return project.getAdmin().equals(user);
     }
 
-    public boolean isMember(UserEntity user, ProjectEntity project) {
-        return project.getUsers().contains(user);
+    private void assignProjectAdminRole(UserEntity admin, ProjectEntity project) {
+        RoleEntity projectAdminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new BadRequestException("Role ADMIN not found", HttpStatus.BAD_REQUEST));
+
+        ProjectRoleEntity projectRole = ProjectRoleEntity.builder()
+                .user(admin)
+                .project(project)
+                .role(projectAdminRole)
+                .build();
+
+        projectRoleRepository.save(projectRole);
     }
 }

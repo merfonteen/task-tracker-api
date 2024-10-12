@@ -35,6 +35,9 @@ public class UserEntity {
     )
     private List<ProjectEntity> memberProjects  = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectRoleEntity> projectRoles = new ArrayList<>();
+
     public boolean isEnabled() {
         return enabled;
     }

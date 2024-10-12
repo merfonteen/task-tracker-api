@@ -22,13 +22,13 @@ public class TaskStateController {
     public static final String CHANGE_TASK_STATE_POSITION = "/api/task-states/{task_state_id}/position/change";
     public static final String DELETE_TASK_STATE = "/api/task-states/{task_state_id}";
 
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_USER')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
     @GetMapping(GET_TASK_STATES)
     public List<TaskStateDto> getTaskStates(@PathVariable(name = "project_id") Long projectId) {
         return taskStateService.getTaskStates(projectId);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @PostMapping(CREATE_TASK_STATE)
     public TaskStateDto createTaskState(
             @PathVariable(name = "project_id") Long projectId,
@@ -36,7 +36,7 @@ public class TaskStateController {
         return taskStateService.createTaskState(projectId, taskStateName);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasTaskStatePermission(#taskStateId, 'WRITE')")
     @PatchMapping(EDIT_TASK_STATE)
     public TaskStateDto editTaskState(
             @PathVariable(name = "task_state_id") Long taskStateId,
@@ -44,7 +44,7 @@ public class TaskStateController {
         return taskStateService.editTaskState(taskStateId, taskStateName);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasTaskStatePermission(#taskStateId, 'WRITE')")
     @PatchMapping(CHANGE_TASK_STATE_POSITION)
     public TaskStateDto changeTaskStatePosition(
             @PathVariable(name = "task_state_id") Long taskStateId,
@@ -52,7 +52,7 @@ public class TaskStateController {
         return taskStateService.changeTaskStatePosition(taskStateId, optionalLeftTaskStateId);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@projectSecurityService.hasTaskStatePermission(#taskStateId, 'WRITE')")
     @DeleteMapping(DELETE_TASK_STATE)
     public AckDto deleteTaskState(@PathVariable(name = "task_state_id") Long taskStateId) {
         return taskStateService.deleteTaskState(taskStateId);

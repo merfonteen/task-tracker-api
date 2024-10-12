@@ -39,6 +39,9 @@ public class ProjectEntity {
     @ManyToMany(mappedBy = "memberProjects", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private List<UserEntity> users = new ArrayList<>();
 
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectRoleEntity> projectRoles = new ArrayList<>();
+
     public List<TaskEntity> getAllTasks() {
         return taskStates.stream()
                 .flatMap(taskState -> taskState.getTasks().stream())

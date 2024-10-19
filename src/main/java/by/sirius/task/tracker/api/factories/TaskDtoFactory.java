@@ -11,6 +11,7 @@ public class TaskDtoFactory {
         return TaskDto.builder()
                 .id(taskEntity.getId())
                 .name(taskEntity.getName())
+                .assignedUser(taskEntity.getAssignedUser().getUsername())
                 .leftTaskId(taskEntity.getLeftTask().map(TaskEntity::getId).orElse(null))
                 .rightTaskId(taskEntity.getRightTask().map(TaskEntity::getId).orElse(null))
                 .createdAt(taskEntity.getCreatedAt())

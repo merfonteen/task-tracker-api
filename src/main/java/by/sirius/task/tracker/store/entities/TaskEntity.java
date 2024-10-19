@@ -33,6 +33,10 @@ public class TaskEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_user_id", referencedColumnName = "id")
+    private UserEntity assignedUser;
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;

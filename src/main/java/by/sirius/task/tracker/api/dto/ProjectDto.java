@@ -17,6 +17,9 @@ public class ProjectDto {
     private String name;
 
     @NonNull
+    private String owner;
+
+    @NonNull
     @JsonProperty("created_at")
     private Instant createdAt;
 }

@@ -9,6 +9,7 @@ import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
 import by.sirius.task.tracker.store.entities.TaskEntity;
 import by.sirius.task.tracker.store.entities.TaskStateEntity;
+import by.sirius.task.tracker.store.entities.UserEntity;
 import by.sirius.task.tracker.store.repositories.TaskRepository;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
@@ -251,5 +252,29 @@ public class TaskService {
         taskStateRepository.saveAndFlush(newTaskState);
 
         return taskDtoFactory.makeTaskDto(updatedTask);
+    }
+
+    @Transactional
+    public TaskDto assignTaskToUser(Long taskId, String username) {
+        log.info("Assigning task with ID: {} for user: {}", taskId, username);
+
+        TaskEntity task = serviceHelper.getTaskOrThrowException(taskId);
+        UserEntity user = serviceHelper.getUserOrThrowException(username);
+
+        task.setAssignedUser(user);
+        taskRepository.saveAndFlush(task);
+
+        return taskDtoFactory.makeTaskDto(task);
+    }
+
+    public List<TaskDto> getAssignedTasks(String username) {
+        log.debug("Fetching assigned for project user: {}", username);
+
+        UserEntity user = serviceHelper.getUserOrThrowException(username);
+        List<TaskEntity> assignedTasks = taskRepository.findByAssignedUser(user);
+
+        return assignedTasks.stream()
+                .map(taskDtoFactory::makeTaskDto)
+                .collect(Collectors.toList());
     }
 }

@@ -20,11 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -38,16 +35,13 @@ public class ProjectService {
 
     private final ServiceHelper serviceHelper;
 
-    public List<ProjectDto> fetchProjects(Optional<String> optionalPrefixName) {
-        log.info("Fetching projects with prefix: {}", optionalPrefixName.orElse("none"));
+    public List<ProjectDto> getProjects() {
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
 
-        optionalPrefixName = optionalPrefixName.filter(prefixName -> !prefixName.trim().isEmpty());
+        List<ProjectEntity> userProjects = findUserProjects(currentUser);
 
-        Stream<ProjectEntity> projectStream = optionalPrefixName
-                .map(projectRepository::streamAllByNameStartsWithIgnoreCase)
-                .orElseGet(projectRepository::streamAllBy);
-
-        return projectStream
+        return userProjects.stream()
                 .map(projectDtoFactory::makeProjectDto)
                 .collect(Collectors.toList());
     }
@@ -133,6 +127,16 @@ public class ProjectService {
         }
 
         return AckDto.builder().answer(true).build();
+    }
+
+    public List<ProjectEntity> findUserProjects(UserEntity user) {
+        List<ProjectEntity> ownedProjects = projectRepository.findAllByAdmin(user);
+        List<ProjectEntity> memberProjects = projectRepository.findAllByUsersContaining(user);
+
+        Set<ProjectEntity> userProjects = new HashSet<>(ownedProjects);
+        userProjects.addAll(memberProjects);
+
+        return new ArrayList<>(userProjects);
     }
 
     public ProjectEntity getProjectById(Long projectId) {

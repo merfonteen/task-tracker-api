@@ -28,14 +28,14 @@ public class ProjectEntity {
     @Builder.Default
     private Instant createdAt = Instant.now();
 
+    @ManyToOne
+    @JoinColumn(name = "admin_id", referencedColumnName = "id")
+    private UserEntity admin;
+
     @Builder.Default
     @OneToMany
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     private List<TaskStateEntity> taskStates = new ArrayList<>();
-
-    @ManyToOne
-    @JoinColumn(name = "admin_id", referencedColumnName = "id")
-    private UserEntity admin;
 
     @ManyToMany(mappedBy = "memberProjects", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private List<UserEntity> users = new ArrayList<>();

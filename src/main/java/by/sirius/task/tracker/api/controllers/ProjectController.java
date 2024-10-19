@@ -33,14 +33,12 @@ public class ProjectController {
     public static final String EDIT_PROJECT = "/api/projects/{project_id}";
     public static final String DELETE_PROJECT = "/api/projects/{project_id}";
     public static final String REMOVE_USER_FROM_PROJECT = "/api/projects/{project_id}/users/{username}";
-    private static final String SEND_INVITATION_TO_PROJECT = "/api/projects/{project_id}/invitations/send";
+    public static final String SEND_INVITATION_TO_PROJECT = "/api/projects/{project_id}/invitations/send";
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(FETCH_PROJECTS)
-    public List<ProjectDto> fetchProjects(
-            @RequestParam(required = false) Optional<String> optionalPrefixName) {
-        log.info("Fetching projects with prefix: {}", optionalPrefixName.orElse("none"));
-       return projectService.fetchProjects(optionalPrefixName);
+    public List<ProjectDto> getProjects() {
+       return projectService.getProjects();
     }
 
     @PreAuthorize("isAuthenticated()")

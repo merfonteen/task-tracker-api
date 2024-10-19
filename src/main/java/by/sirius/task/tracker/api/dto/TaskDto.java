@@ -16,6 +16,8 @@ public class TaskDto {
     @NonNull
     private String name;
 
+    private String assignedUser;
+
     @JsonProperty("left_task_id")
     private Long leftTaskId;
 

@@ -1,6 +1,7 @@
 package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
+import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.*;
 import by.sirius.task.tracker.store.repositories.*;
@@ -14,13 +15,14 @@ import org.springframework.stereotype.Service;
 public class ProjectSecurityService {
 
     private final ServiceHelper serviceHelper;
+    private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
     private final ProjectRoleRepository projectRoleRepository;
 
     public boolean hasProjectPermission(Long projectId, String permissionType) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
-
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
         return checkPermissions(permissionType, currentUser, project);
@@ -30,9 +32,7 @@ public class ProjectSecurityService {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
-
         TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
-
         ProjectEntity project = taskState.getProject();
 
         return checkPermissions(permissionType, currentUser, project);
@@ -42,14 +42,24 @@ public class ProjectSecurityService {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
-
         TaskEntity taskEntity = serviceHelper.getTaskOrThrowException(taskId);
-
         TaskStateEntity taskState = taskEntity.getTaskStateEntity();
-
         ProjectEntity project = taskState.getProject();
 
         return checkPermissions(permissionType, currentUser, project);
+    }
+
+    public boolean isAdminOfProject(Long projectId, String username) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found", HttpStatus.NOT_FOUND));
+
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
+
+        ProjectRoleEntity projectUserRole = projectRoleRepository.findByUserAndProject(user, project)
+                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.BAD_REQUEST));
+
+        return projectUserRole.getRole().getName().equals("ROLE_ADMIN");
     }
 
     private boolean checkPermissions(String permissionType, UserEntity currentUser, ProjectEntity project) {

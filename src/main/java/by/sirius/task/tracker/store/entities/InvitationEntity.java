@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -35,4 +36,17 @@ public class InvitationEntity {
 
     @Builder.Default
     private Instant sentAt = Instant.now();
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(!(o instanceof InvitationEntity)) return false;
+        InvitationEntity that = (InvitationEntity) o;
+        return Objects.equals(that.id, id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

@@ -10,6 +10,7 @@ import by.sirius.task.tracker.store.entities.TaskStateEntity;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class TaskStateService {
 
@@ -27,6 +29,7 @@ public class TaskStateService {
     private final ServiceHelper serviceHelper;
 
     public List<TaskStateDto> getTaskStates(Long projectId) {
+        log.debug("Fetching task states for project ID: {}", projectId);
 
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
@@ -39,13 +42,13 @@ public class TaskStateService {
 
     @Transactional
     public TaskStateDto createTaskState(Long projectId, String taskStateName) {
+        log.info("Creating task state '{}' in project with ID: {}", taskStateName, projectId);
 
         if (taskStateName.isBlank()) {
             throw new BadRequestException("Task state name can't be empty.", HttpStatus.BAD_REQUEST);
         }
 
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
-
         Optional<TaskStateEntity> optionalAnotherTaskState = Optional.empty();
 
         for (TaskStateEntity taskState : project.getTaskStates()) {
@@ -80,6 +83,7 @@ public class TaskStateService {
 
     @Transactional
     public TaskStateDto editTaskState(Long taskStateId, String taskStateName) {
+        log.info("Editing task state with ID: {}, new name: {}", taskStateId, taskStateName);
 
         if (taskStateName.isBlank()) {
             throw new BadRequestException("Task state name can't be empty.", HttpStatus.BAD_REQUEST);
@@ -99,16 +103,15 @@ public class TaskStateService {
                 });
 
         taskState.setName(taskStateName);
-
         taskState = taskStateRepository.saveAndFlush(taskState);
 
         return taskStateDtoFactory.makeTaskStateDto(taskState);
     }
 
     public TaskStateDto changeTaskStatePosition(Long taskStateId, Optional<Long> optionalLeftTaskStateId) {
+        log.info("Changing task state position for task state ID: {}, left state ID: {}", taskStateId, optionalLeftTaskStateId.orElse(null));
 
         TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
-
         ProjectEntity project = changeTaskState.getProject();
 
         Optional<Long> optionalOldLeftTaskStateId = changeTaskState
@@ -139,7 +142,6 @@ public class TaskStateService {
 
         Optional<TaskStateEntity> optionalNewRightTaskState;
         if (optionalNewLeftTaskState.isEmpty()) {
-
             optionalNewRightTaskState = project
                     .getTaskStates()
                     .stream()
@@ -155,22 +157,16 @@ public class TaskStateService {
         serviceHelper.replaceOldTaskStatePosition(changeTaskState);
 
         if (optionalNewLeftTaskState.isPresent()) {
-
             TaskStateEntity newLeftTaskState = optionalNewLeftTaskState.get();
-
             newLeftTaskState.setRightTaskState(changeTaskState);
-
             changeTaskState.setLeftTaskState(newLeftTaskState);
         } else {
             changeTaskState.setLeftTaskState(null);
         }
 
         if (optionalNewRightTaskState.isPresent()) {
-
             TaskStateEntity newRightTaskState = optionalNewRightTaskState.get();
-
             newRightTaskState.setLeftTaskState(changeTaskState);
-
             changeTaskState.setRightTaskState(newRightTaskState);
         } else {
             changeTaskState.setRightTaskState(null);
@@ -189,11 +185,11 @@ public class TaskStateService {
 
     @Transactional
     public AckDto deleteTaskState(Long taskStateId) {
+        log.warn("Deleting task state with ID: {}", taskStateId);
 
         TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
 
         serviceHelper.replaceOldTaskStatePosition(changeTaskState);
-
         taskStateRepository.delete(changeTaskState);
 
         return AckDto.builder().answer(true).build();

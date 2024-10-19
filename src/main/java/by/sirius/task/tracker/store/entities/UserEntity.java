@@ -2,9 +2,11 @@ package by.sirius.task.tracker.store.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.apache.catalina.User;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -37,6 +39,19 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectRoleEntity> projectRoles = new ArrayList<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(!(o instanceof UserEntity)) return false;
+        UserEntity that = (UserEntity) o;
+        return Objects.equals(that.id, id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 
     public boolean isEnabled() {
         return enabled;

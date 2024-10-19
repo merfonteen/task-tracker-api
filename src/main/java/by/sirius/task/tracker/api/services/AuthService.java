@@ -26,15 +26,15 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public ResponseEntity<String> register(AuthRequestDto authRequestDto) {
+    public ResponseEntity<?> register(AuthRequestDto authRequestDto) {
 
         if (userRepository.existsByUsername(authRequestDto.getUsername())) {
-            throw new BadRequestException("Username is already taken.", HttpStatus.BAD_REQUEST);
+            throw new BadRequestException("Username is already taken!", HttpStatus.BAD_REQUEST);
         }
 
         UserEntity user = userService.createNewUser(authRequestDto);
 
-        return ResponseEntity.ok("User registered successfully.");
+        return ResponseEntity.ok("User registered successfully!");
     }
 
     public ResponseEntity<?> login(AuthRequestDto authRequest) {
@@ -43,10 +43,12 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         }
         catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password!");
         }
+
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(authRequest.getUsername());
         String token = jwtTokenUtil.generateToken(userDetails);
+
         return ResponseEntity.ok(new AuthResponseDto(token));
     }
 }

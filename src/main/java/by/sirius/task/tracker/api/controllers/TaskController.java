@@ -4,6 +4,7 @@ import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskDto;
 import by.sirius.task.tracker.api.services.TaskService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
+@Slf4j
 public class TaskController {
 
     private final TaskService taskService;
@@ -27,6 +29,7 @@ public class TaskController {
     @GetMapping(GET_TASKS)
     public List<TaskDto> getTasks(@PathVariable(name = "project_id") Long projectId,
                                   @PathVariable(name = "task_state_id") Long taskStateId) {
+        log.debug("Fetching tasks for project ID: {} and task state ID: {}", projectId, taskStateId);
         return taskService.getTasks(projectId, taskStateId);
     }
 
@@ -34,14 +37,16 @@ public class TaskController {
     @PostMapping(CREATE_TASK)
     public TaskDto createTask(@PathVariable(name = "project_id") Long projectId,
                               @PathVariable(name = "task_state_id") Long taskStateId,
-                              @RequestParam(name = "task_name") String taskName) {
+                              @RequestParam String taskName) {
+        log.info("Creating task '{}' in project ID: {} and task state ID: {}", taskName, projectId, taskStateId);
         return taskService.createTask(projectId, taskStateId, taskName);
     }
 
     @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
     @PatchMapping(EDIT_TASK)
     public TaskDto editTask(@PathVariable(name = "task_id") Long taskId,
-                            @RequestParam(name = "task_name") String taskName) {
+                            @RequestParam String taskName) {
+        log.info("Editing task ID: {}, new name: {}", taskId, taskName);
         return taskService.editTask(taskId, taskName);
     }
 
@@ -49,20 +54,23 @@ public class TaskController {
     @PatchMapping(CHANGE_TASK_POSITION)
     public TaskDto changeTaskPosition(
             @PathVariable(name = "task_id") Long taskId,
-            @RequestParam(name = "optional_left_task_id", required = false) Optional<Long> leftTaskId) {
+            @RequestParam(required = false) Optional<Long> leftTaskId) {
+        log.info("Changing task position for task ID: {} with left task ID: {}", taskId, leftTaskId.orElse(null));
         return taskService.changeTaskPosition(taskId, leftTaskId);
     }
 
     @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
     @DeleteMapping(DELETE_TASK)
     public AckDto deleteTask(@PathVariable(name = "task_id") Long taskId) {
+        log.warn("Deleting task with ID: {}", taskId);
         return taskService.deleteTask(taskId);
     }
 
     @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
     @PatchMapping(CHANGE_TASK_STATE)
     public TaskDto changeTaskState(@PathVariable(name = "task_id") Long taskId,
-                                   @RequestParam(name = "new_task_state_id") Long newTaskStateId) {
+                                   @RequestParam Long newTaskStateId) {
+        log.info("Changing task state for task ID: {} to new task state ID: {}", taskId, newTaskStateId);
         return taskService.changeTaskState(taskId, newTaskStateId);
     }
 }

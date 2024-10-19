@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 @Service
 public class ProjectService {
@@ -40,6 +39,7 @@ public class ProjectService {
     private final ServiceHelper serviceHelper;
 
     public List<ProjectDto> fetchProjects(Optional<String> optionalPrefixName) {
+        log.info("Fetching projects with prefix: {}", optionalPrefixName.orElse("none"));
 
         optionalPrefixName = optionalPrefixName.filter(prefixName -> !prefixName.trim().isEmpty());
 
@@ -54,6 +54,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectDto createProject(String name) {
+        log.info("Creating project with name: {}", name);
 
         if (name.trim().isEmpty()) {
             throw new BadRequestException("Name can't be empty", HttpStatus.BAD_REQUEST);
@@ -84,6 +85,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectDto editProject(Long projectId, String name) {
+        log.info("Editing project with ID: {} to new name: {}", projectId, name);
 
         if (name.trim().isEmpty()) {
             throw new BadRequestException("Name can't be empty", HttpStatus.BAD_REQUEST);
@@ -106,19 +108,17 @@ public class ProjectService {
 
     @Transactional
     public AckDto deleteProject(Long projectId) {
-
+        log.warn("Deleting project with ID: {}", projectId);
         serviceHelper.getProjectOrThrowException(projectId);
-
         projectRepository.deleteById(projectId);
-
         return AckDto.makeDefault(true);
     }
 
     @Transactional
     public AckDto removeUserFromProject(Long projectId, String username) {
+        log.warn("Removing user {} from project with ID: {}", username, projectId);
 
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
-
         UserEntity userToDelete = serviceHelper.getUserOrThrowException(username);
 
         project.getUsers().remove(userToDelete);
@@ -128,9 +128,7 @@ public class ProjectService {
         userRepository.save(userToDelete);
 
         if (userToDelete.getMemberProjects().isEmpty()) {
-
             RoleEntity userRole = serviceHelper.getUserRoleOrThrowException();
-
             userToDelete.getRoles().remove(userRole);
         }
 
@@ -146,7 +144,6 @@ public class ProjectService {
     }
 
     private void assignProjectAdminRole(UserEntity admin, ProjectEntity project) {
-
         RoleEntity projectAdminRole = serviceHelper.getAdminRoleOrThrowException();
 
         ProjectRoleEntity projectRole = ProjectRoleEntity.builder()

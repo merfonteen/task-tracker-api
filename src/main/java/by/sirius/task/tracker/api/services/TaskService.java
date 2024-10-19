@@ -13,6 +13,7 @@ import by.sirius.task.tracker.store.repositories.TaskRepository;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class TaskService {
 
@@ -31,6 +33,7 @@ public class TaskService {
     private final ServiceHelper serviceHelper;
 
     public List<TaskDto> getTasks(Long projectId, Long taskStateId) {
+        log.debug("Fetching tasks for project ID: {} and task state ID: {}", projectId, taskStateId);
 
         Optional<TaskStateEntity> taskState = taskStateRepository.findByProjectIdAndId(projectId, taskStateId);
 
@@ -45,15 +48,14 @@ public class TaskService {
 
     @Transactional
     public TaskDto createTask(Long projectId, Long taskStateId, String taskName) {
+        log.info("Creating task '{}' in project ID: {} and task state ID: {}", taskName, projectId, taskStateId);
 
         if (taskName.isBlank()) {
             throw new BadRequestException("Task name can't be empty.", HttpStatus.BAD_REQUEST);
         }
 
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
-
         TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
-
         Optional<TaskEntity> optionalAnotherTask = Optional.empty();
 
         for (TaskEntity task : taskState.getTasks()) {
@@ -88,13 +90,13 @@ public class TaskService {
 
     @Transactional
     public TaskDto editTask(Long taskId, String taskName) {
+        log.info("Editing task ID: {}, new name: {}", taskId, taskName);
 
         if (taskName.isBlank()) {
             throw new BadRequestException("Task name can't be empty.", HttpStatus.BAD_REQUEST);
         }
 
         TaskEntity taskToUpdate = serviceHelper.getTaskOrThrowException(taskId);
-
         Long taskStateId = taskToUpdate.getTaskStateEntity().getId();
 
         taskRepository
@@ -113,9 +115,9 @@ public class TaskService {
     }
 
     public TaskDto changeTaskPosition(Long taskId, Optional<Long> optionalLeftTaskId) {
+        log.info("Changing task position for task ID: {} with left task ID: {}", taskId, optionalLeftTaskId.orElse(null));
 
         TaskEntity changeTask = serviceHelper.getTaskOrThrowException(taskId);
-
         TaskStateEntity taskState = changeTask.getTaskStateEntity();
 
         Optional<Long> optionalOldLeftTaskId = changeTask
@@ -146,14 +148,12 @@ public class TaskService {
 
         Optional<TaskEntity> optionalNewRightTask;
         if (optionalNewLeftTask.isEmpty()) {
-
             optionalNewRightTask = taskState
                     .getTasks()
                     .stream()
                     .filter(anotherTask -> anotherTask.getLeftTask().isEmpty())
                     .findAny();
         } else {
-
             optionalNewRightTask = optionalNewLeftTask
                     .get()
                     .getRightTask();
@@ -162,22 +162,16 @@ public class TaskService {
         serviceHelper.replaceOldTaskPosition(changeTask);
 
         if (optionalNewLeftTask.isPresent()) {
-
             TaskEntity newLeftTask = optionalNewLeftTask.get();
-
             newLeftTask.setRightTask(changeTask);
-
             changeTask.setLeftTask(newLeftTask);
         } else {
             changeTask.setLeftTask(null);
         }
 
         if (optionalNewRightTask.isPresent()) {
-
             TaskEntity newRightTask = optionalNewRightTask.get();
-
             newRightTask.setLeftTask(changeTask);
-
             changeTask.setRightTask(newRightTask);
         } else {
             changeTask.setRightTask(null);
@@ -198,16 +192,15 @@ public class TaskService {
 
     @Transactional
     public AckDto deleteTask(Long taskId) {
+        log.warn("Deleting task with ID: {}", taskId);
 
         TaskEntity taskToDelete = serviceHelper.getTaskOrThrowException(taskId);
-
         serviceHelper.replaceOldTaskPosition(taskToDelete);
 
         TaskStateEntity taskState = taskToDelete.getTaskStateEntity();
         taskState.getTasks().remove(taskToDelete);
 
         taskStateRepository.saveAndFlush(taskState);
-
         taskRepository.delete(taskToDelete);
 
         return AckDto.builder().answer(true).build();
@@ -215,11 +208,10 @@ public class TaskService {
 
     @Transactional
     public TaskDto changeTaskState(Long taskId, Long newTaskStateId) {
+        log.info("Changing task state for task ID: {} to new task state ID: {}", taskId, newTaskStateId);
 
         TaskEntity taskToMove = serviceHelper.getTaskOrThrowException(taskId);
-
         TaskStateEntity newTaskState = serviceHelper.getTaskStateOrThrowException(newTaskStateId);
-
         TaskStateEntity currentTaskState = taskToMove.getTaskStateEntity();
 
         newTaskState.getTasks()

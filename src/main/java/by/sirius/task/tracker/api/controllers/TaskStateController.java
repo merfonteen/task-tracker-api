@@ -4,6 +4,7 @@ import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskStateDto;
 import by.sirius.task.tracker.api.services.TaskStateService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
+@Slf4j
 public class TaskStateController {
 
     private final TaskStateService taskStateService;
@@ -25,6 +27,7 @@ public class TaskStateController {
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
     @GetMapping(GET_TASK_STATES)
     public List<TaskStateDto> getTaskStates(@PathVariable(name = "project_id") Long projectId) {
+        log.debug("Fetching task states for project ID: {}", projectId);
         return taskStateService.getTaskStates(projectId);
     }
 
@@ -32,7 +35,8 @@ public class TaskStateController {
     @PostMapping(CREATE_TASK_STATE)
     public TaskStateDto createTaskState(
             @PathVariable(name = "project_id") Long projectId,
-            @RequestParam(name = "task_state_name") String taskStateName) {
+            @RequestParam String taskStateName) {
+        log.info("Creating task state '{}' in project with ID: {}", taskStateName, projectId);
         return taskStateService.createTaskState(projectId, taskStateName);
     }
 
@@ -40,7 +44,8 @@ public class TaskStateController {
     @PatchMapping(EDIT_TASK_STATE)
     public TaskStateDto editTaskState(
             @PathVariable(name = "task_state_id") Long taskStateId,
-            @RequestParam(name = "task_state_name") String taskStateName) {
+            @RequestParam String taskStateName) {
+        log.info("Editing task state with ID: {}, new name: {}", taskStateId, taskStateName);
         return taskStateService.editTaskState(taskStateId, taskStateName);
     }
 
@@ -48,13 +53,15 @@ public class TaskStateController {
     @PatchMapping(CHANGE_TASK_STATE_POSITION)
     public TaskStateDto changeTaskStatePosition(
             @PathVariable(name = "task_state_id") Long taskStateId,
-            @RequestParam(name = "optional_left_task_state_id", required = false) Optional<Long> optionalLeftTaskStateId) {
+            @RequestParam(required = false) Optional<Long> optionalLeftTaskStateId) {
+        log.info("Changing task state position for task state ID: {}, left state ID: {}", taskStateId, optionalLeftTaskStateId.orElse(null));
         return taskStateService.changeTaskStatePosition(taskStateId, optionalLeftTaskStateId);
     }
 
     @PreAuthorize("@projectSecurityService.hasTaskStatePermission(#taskStateId, 'WRITE')")
     @DeleteMapping(DELETE_TASK_STATE)
     public AckDto deleteTaskState(@PathVariable(name = "task_state_id") Long taskStateId) {
+        log.warn("Deleting task state with ID: {}", taskStateId);
         return taskStateService.deleteTaskState(taskStateId);
     }
 }

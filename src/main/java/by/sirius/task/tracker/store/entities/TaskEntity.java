@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 @Getter
@@ -31,6 +32,19 @@ public class TaskEntity {
 
     @Builder.Default
     private Instant createdAt = Instant.now();
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) return true;
+        if(!(o instanceof TaskEntity)) return false;
+        TaskEntity that = (TaskEntity) o;
+        return Objects.equals(that.id, id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 
     public Optional<TaskEntity> getLeftTask() {
         return Optional.ofNullable(leftTask);

@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
@@ -42,9 +43,16 @@ public class ProjectEntity {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectRoleEntity> projectRoles = new ArrayList<>();
 
-    public List<TaskEntity> getAllTasks() {
-        return taskStates.stream()
-                .flatMap(taskState -> taskState.getTasks().stream())
-                .collect(Collectors.toList());
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ProjectEntity)) return false;
+        ProjectEntity that = (ProjectEntity) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

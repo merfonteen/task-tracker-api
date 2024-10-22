@@ -28,7 +28,7 @@ public class ProjectController {
     private final ProjectService projectService;
     private final InvitationService invitationService;
 
-    public static final String FETCH_PROJECTS = "/api/projects";
+    public static final String GET_PROJECTS = "/api/projects";
     public static final String CREATE_PROJECT = "/api/projects";
     public static final String EDIT_PROJECT = "/api/projects/{project_id}";
     public static final String DELETE_PROJECT = "/api/projects/{project_id}";
@@ -36,7 +36,7 @@ public class ProjectController {
     public static final String SEND_INVITATION_TO_PROJECT = "/api/projects/{project_id}/invitations/send";
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(FETCH_PROJECTS)
+    @GetMapping(GET_PROJECTS)
     public List<ProjectDto> getProjects() {
        return projectService.getProjects();
     }

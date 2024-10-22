@@ -28,6 +28,7 @@ public class UserService {
         List<UserEntity> users = userRepository.findAllByMemberProjects_Id(projectId);
         return users.stream()
                 .map(user -> new UserDto(
+                        user.getEmail(),
                         user.getUsername(),
                         user.getRoles().stream()
                                 .map(role -> RoleDto.builder()
@@ -42,6 +43,7 @@ public class UserService {
     @Transactional
     public UserEntity createNewUser(AuthRequestDto authRequestDto) {
         UserEntity user = new UserEntity();
+        user.setEmail(authRequestDto.getEmail());
         user.setUsername(authRequestDto.getUsername());
         user.setPassword(passwordEncoder.encode(authRequestDto.getPassword()));
         user.setRoles(List.of(roleService.getAdminRole()));

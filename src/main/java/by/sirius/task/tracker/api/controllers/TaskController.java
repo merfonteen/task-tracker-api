@@ -5,8 +5,6 @@ import by.sirius.task.tracker.api.dto.TaskDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.services.ProjectSecurityService;
 import by.sirius.task.tracker.api.services.TaskService;
-import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
-import by.sirius.task.tracker.store.entities.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,8 +27,8 @@ public class TaskController {
     public static final String GET_USER_TASKS = "/api/projects/{project_id}/users/{username}/tasks";
     public static final String CREATE_TASK = "/api/projects/{project_id}/task-states/{task_state_id}/tasks";
     public static final String EDIT_TASK = "/api/tasks/{task_id}";
-    public static final String ASSIGN_TASK_TO_SPECIFIC_USER = "/api/tasks/{task_id}/assign";
     public static final String DELETE_TASK = "/api/tasks/{task_id}";
+    public static final String ASSIGN_TASK_TO_SPECIFIC_USER = "/api/tasks/{task_id}/assign";
     public static final String CHANGE_TASK_STATE = "/api/tasks/{task_id}/state/change";
     public static final String CHANGE_TASK_POSITION = "/api/tasks/{task_id}/position/change";
 

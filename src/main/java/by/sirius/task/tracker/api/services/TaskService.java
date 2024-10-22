@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 public class TaskService {
 
+    private final EmailService emailService;
     private final TaskDtoFactory taskDtoFactory;
     private final TaskRepository taskRepository;
     private final TaskStateRepository taskStateRepository;
@@ -259,16 +260,28 @@ public class TaskService {
         log.info("Assigning task with ID: {} for user: {}", taskId, username);
 
         TaskEntity task = serviceHelper.getTaskOrThrowException(taskId);
+        TaskStateEntity taskState = task.getTaskStateEntity();
+        ProjectEntity project = taskState.getProject();
         UserEntity user = serviceHelper.getUserOrThrowException(username);
+
+        if(!project.getUsers().contains(user)) {
+            throw new BadRequestException("Project doesn't contain user: " + username, HttpStatus.BAD_REQUEST);
+        }
 
         task.setAssignedUser(user);
         taskRepository.saveAndFlush(task);
+
+        emailService.sendEmail(
+                user.getEmail(),
+                "You have been assigned a task",
+                "You have been assigned to the task: " + task.getName()
+        );
 
         return taskDtoFactory.makeTaskDto(task);
     }
 
     public List<TaskDto> getAssignedTasks(String username) {
-        log.debug("Fetching assigned for project user: {}", username);
+        log.debug("Getting assigned for project user: {}", username);
 
         UserEntity user = serviceHelper.getUserOrThrowException(username);
         List<TaskEntity> assignedTasks = taskRepository.findByAssignedUser(user);

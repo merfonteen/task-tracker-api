@@ -118,6 +118,8 @@ public class ProjectService {
         project.getUsers().remove(userToDelete);
         userToDelete.getMemberProjects().remove(project);
 
+        projectRoleRepository.deleteByUserAndProject(userToDelete, project);
+
         projectRepository.save(project);
         userRepository.save(userToDelete);
 

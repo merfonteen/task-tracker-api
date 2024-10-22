@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDto {
+    private String email;
     private String username;
     private List<RoleDto> roles;
     private boolean enabled;

@@ -50,21 +50,18 @@ public class ProjectSecurityService {
     }
 
     public boolean isAdminOfProject(Long projectId, String username) {
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("User not found", HttpStatus.NOT_FOUND));
-
-        ProjectEntity project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
+        UserEntity user = serviceHelper.getUserOrThrowException(username);
+        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
         ProjectRoleEntity projectUserRole = projectRoleRepository.findByUserAndProject(user, project)
-                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.UNAUTHORIZED));
 
         return projectUserRole.getRole().getName().equals("ROLE_ADMIN");
     }
 
     private boolean checkPermissions(String permissionType, UserEntity currentUser, ProjectEntity project) {
         ProjectRoleEntity projectUserRole = projectRoleRepository.findByUserAndProject(currentUser, project)
-                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new BadRequestException("No permissions", HttpStatus.UNAUTHORIZED));
 
         if (permissionType.equals("WRITE") && projectUserRole.getRole().getName().equals("ROLE_ADMIN")) {
             return true;

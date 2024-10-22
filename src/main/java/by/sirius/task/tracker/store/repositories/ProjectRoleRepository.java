@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface ProjectRoleRepository extends JpaRepository<ProjectRoleEntity, Long> {
     Optional<ProjectRoleEntity> findByUserAndProject(UserEntity user, ProjectEntity project);
     boolean existsByUserAndProjectAndRole(UserEntity user, ProjectEntity project, RoleEntity role);
+    void deleteByUserAndProject(UserEntity user, ProjectEntity project);
 }

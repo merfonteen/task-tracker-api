@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InvitationService {
 
+    private final EmailService emailService;
     private final InvitationDtoFactory invitationDtoFactory;
     private final InvitationRepository invitationRepository;
     private final ProjectRoleRepository projectRoleRepository;
@@ -50,9 +51,7 @@ public class InvitationService {
     public InvitationDto sendInvitation(String invitingAdminUsername, String invitedUsername, Long projectId) {
 
         UserEntity admin = serviceHelper.getUserOrThrowException(invitingAdminUsername);
-
         UserEntity user = serviceHelper.getUserOrThrowException(invitedUsername);
-
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
         Optional<InvitationEntity> existingInvitation = invitationRepository
@@ -71,6 +70,12 @@ public class InvitationService {
 
         InvitationEntity invitationToSave = invitationRepository.saveAndFlush(invitation);
 
+        emailService.sendEmail(
+                user.getEmail(),
+                "Project Invitation",
+                "You have been invited to join the project: " + invitation.getProject().getName()
+        );
+
         return invitationDtoFactory.makeInvitationDto(invitationToSave);
     }
 
@@ -78,6 +83,10 @@ public class InvitationService {
     public AckDto acceptInvitation(Long invitationId) {
 
         InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
+
+        if(invitation.getStatus().equals(InvitationStatus.DECLINED)) {
+            throw new BadRequestException("This invitation has been declined", HttpStatus.BAD_REQUEST);
+        }
 
         invitation.setStatus(InvitationStatus.ACCEPTED);
 

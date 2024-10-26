@@ -8,6 +8,7 @@ import by.sirius.task.tracker.store.entities.UserEntity;
 import by.sirius.task.tracker.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class UserService {
 
@@ -25,6 +27,7 @@ public class UserService {
     private final ServiceHelper serviceHelper;
 
     public List<UserDto> getUsers(Long projectId) {
+        log.info("Getting all users from project with id: {}", projectId);
         List<UserEntity> users = userRepository.findAllByMemberProjects_Id(projectId);
         return users.stream()
                 .map(user -> new UserDto(
@@ -42,6 +45,7 @@ public class UserService {
 
     @Transactional
     public UserEntity createNewUser(AuthRequestDto authRequestDto) {
+        log.info("Creating user for register...");
         UserEntity user = new UserEntity();
         user.setEmail(authRequestDto.getEmail());
         user.setUsername(authRequestDto.getUsername());

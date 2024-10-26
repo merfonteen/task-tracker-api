@@ -69,20 +69,19 @@ public class TaskController {
         return taskService.editTask(taskId, taskName);
     }
 
-    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
-    @PatchMapping(CHANGE_TASK_POSITION)
-    public TaskDto changeTaskPosition(
-            @PathVariable("task_id") Long taskId,
-            @RequestParam(required = false) Optional<Long> leftTaskId) {
-        log.info("Changing task position for task ID: {} with left task ID: {}", taskId, leftTaskId.orElse(null));
-        return taskService.changeTaskPosition(taskId, leftTaskId);
-    }
-
     @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
     @DeleteMapping(DELETE_TASK)
     public AckDto deleteTask(@PathVariable("task_id") Long taskId) {
         log.warn("Deleting task with ID: {}", taskId);
         return taskService.deleteTask(taskId);
+    }
+
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
+    @PatchMapping(ASSIGN_TASK_TO_SPECIFIC_USER)
+    public TaskDto assignTaskToUser(@PathVariable("task_id") Long taskId,
+                                    @RequestParam String username) {
+        log.info("Assigning task with ID: {} for user: {}", taskId, username);
+        return taskService.assignTaskToUser(taskId, username);
     }
 
     @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
@@ -93,11 +92,12 @@ public class TaskController {
         return taskService.changeTaskState(taskId, newTaskStateId);
     }
 
-    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
-    @PatchMapping(ASSIGN_TASK_TO_SPECIFIC_USER)
-    public TaskDto assignTaskToUser(@PathVariable("task_id") Long taskId,
-                                            @RequestParam String username) {
-        log.info("Assigning task with ID: {} for user: {}", taskId, username);
-        return taskService.assignTaskToUser(taskId, username);
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
+    @PatchMapping(CHANGE_TASK_POSITION)
+    public TaskDto changeTaskPosition(
+            @PathVariable("task_id") Long taskId,
+            @RequestParam(required = false) Optional<Long> leftTaskId) {
+        log.info("Changing task position for task ID: {} with left task ID: {}", taskId, leftTaskId.orElse(null));
+        return taskService.changeTaskPosition(taskId, leftTaskId);
     }
 }

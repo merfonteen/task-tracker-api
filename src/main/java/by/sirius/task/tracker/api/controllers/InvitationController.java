@@ -21,16 +21,16 @@ public class InvitationController {
 
     @GetMapping(GET_ALL_USERS_INVITATIONS)
     public List<InvitationDto> getUserInvitations(Principal principal) {
-        return invitationService.getUserInvitations(principal);
+        return invitationService.getUserInvitations(principal.getName());
     }
 
     @PostMapping(ACCEPT_INVITATION)
-    public AckDto acceptInvitation(@PathVariable("invitation_id") Long invitationId) {
-        return invitationService.acceptInvitation(invitationId);
+    public AckDto acceptInvitation(@PathVariable("invitation_id") Long invitationId, Principal principal) {
+        return invitationService.acceptInvitation(invitationId, principal.getName());
     }
 
     @PostMapping(DECLINE_INVITATION)
-    public AckDto declineInvitation(@PathVariable("invitation_id") Long invitationId) {
-        return invitationService.declineInvitation(invitationId);
+    public AckDto declineInvitation(@PathVariable("invitation_id") Long invitationId, Principal principal) {
+        return invitationService.declineInvitation(invitationId, principal.getName());
     }
 }

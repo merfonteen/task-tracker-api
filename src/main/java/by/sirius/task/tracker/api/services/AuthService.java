@@ -27,9 +27,12 @@ public class AuthService {
     private final CustomUserDetailsService customUserDetailsService;
 
     public ResponseEntity<?> register(AuthRequestDto authRequestDto) {
-
         if (userRepository.existsByUsername(authRequestDto.getUsername())) {
             throw new BadRequestException("Username is already taken!", HttpStatus.BAD_REQUEST);
+        }
+
+        if (userRepository.existsByEmail(authRequestDto.getEmail())) {
+            throw new BadRequestException("Email is already in use!", HttpStatus.BAD_REQUEST);
         }
 
         UserEntity user = userService.createNewUser(authRequestDto);

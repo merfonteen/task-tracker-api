@@ -10,6 +10,8 @@ import by.sirius.task.tracker.store.entities.*;
 import by.sirius.task.tracker.store.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +31,10 @@ public class InvitationService {
 
     private final ServiceHelper serviceHelper;
 
-    public List<InvitationDto> getUserInvitations(Principal principal) {
+    @Cacheable(value = "invitations", key = "#username")
+    public List<InvitationDto> getUserInvitations(String username) {
 
-       List<InvitationEntity> allInvitations = invitationRepository.findAllByInvitedUser_username(principal.getName());
+       List<InvitationEntity> allInvitations = invitationRepository.findAllByInvitedUser_username(username);
 
         if(allInvitations.isEmpty()) {
             throw new NotFoundException("There are no invitations.", HttpStatus.NOT_FOUND);
@@ -47,6 +50,7 @@ public class InvitationService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "invitations", key = "#invitedUsername")
     @Transactional
     public InvitationDto sendInvitation(String invitingAdminUsername, String invitedUsername, Long projectId) {
 
@@ -79,8 +83,9 @@ public class InvitationService {
         return invitationDtoFactory.makeInvitationDto(invitationToSave);
     }
 
+    @CacheEvict(value = "invitations", key = "#username")
     @Transactional
-    public AckDto acceptInvitation(Long invitationId) {
+    public AckDto acceptInvitation(Long invitationId, String username) {
 
         InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
 
@@ -113,7 +118,7 @@ public class InvitationService {
     }
 
     @Transactional
-    public AckDto declineInvitation(Long invitationId) {
+    public AckDto declineInvitation(Long invitationId, String username) {
 
         InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
         invitation.setStatus(InvitationStatus.DECLINED);

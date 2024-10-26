@@ -11,6 +11,8 @@ import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +30,7 @@ public class TaskStateService {
 
     private final ServiceHelper serviceHelper;
 
+    @Cacheable(value = "taskStates", key = "#projectId")
     public List<TaskStateDto> getTaskStates(Long projectId) {
         log.debug("Fetching task states for project ID: {}", projectId);
 
@@ -40,6 +43,7 @@ public class TaskStateService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "taskStates", key = "#projectId")
     @Transactional
     public TaskStateDto createTaskState(Long projectId, String taskStateName) {
         log.info("Creating task state '{}' in project with ID: {}", taskStateName, projectId);
@@ -81,6 +85,7 @@ public class TaskStateService {
         return taskStateDtoFactory.makeTaskStateDto(savedTaskState);
     }
 
+    @CacheEvict(value = "taskStates", key = "#taskStateId")
     @Transactional
     public TaskStateDto editTaskState(Long taskStateId, String taskStateName) {
         log.info("Editing task state with ID: {}, new name: {}", taskStateId, taskStateName);
@@ -108,6 +113,21 @@ public class TaskStateService {
         return taskStateDtoFactory.makeTaskStateDto(taskState);
     }
 
+    @CacheEvict(value = "taskStates", key = "#taskStateId")
+    @Transactional
+    public AckDto deleteTaskState(Long taskStateId) {
+        log.warn("Deleting task state with ID: {}", taskStateId);
+
+        TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
+
+        serviceHelper.replaceOldTaskStatePosition(changeTaskState);
+        taskStateRepository.delete(changeTaskState);
+
+        return AckDto.builder().answer(true).build();
+    }
+
+    @CacheEvict(value = "taskStates", key = "#taskStateId")
+    @Transactional
     public TaskStateDto changeTaskStatePosition(Long taskStateId, Optional<Long> optionalLeftTaskStateId) {
         log.info("Changing task state position for task state ID: {}, left state ID: {}", taskStateId, optionalLeftTaskStateId.orElse(null));
 
@@ -181,17 +201,5 @@ public class TaskStateService {
                 .ifPresent(taskStateRepository::saveAndFlush);
 
         return taskStateDtoFactory.makeTaskStateDto(changeTaskState);
-    }
-
-    @Transactional
-    public AckDto deleteTaskState(Long taskStateId) {
-        log.warn("Deleting task state with ID: {}", taskStateId);
-
-        TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
-
-        serviceHelper.replaceOldTaskStatePosition(changeTaskState);
-        taskStateRepository.delete(changeTaskState);
-
-        return AckDto.builder().answer(true).build();
     }
 }

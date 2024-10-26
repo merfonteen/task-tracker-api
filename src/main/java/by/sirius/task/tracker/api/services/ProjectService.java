@@ -16,6 +16,8 @@ import by.sirius.task.tracker.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,10 +37,11 @@ public class ProjectService {
 
     private final ServiceHelper serviceHelper;
 
-    public List<ProjectDto> getProjects() {
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
+    @Cacheable(value = "projects", key = "#currentUsername")
+    public List<ProjectDto> getProjects(String currentUsername) {
+        log.debug("Getting all projects");
 
+        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
         List<ProjectEntity> userProjects = findUserProjects(currentUser);
 
         return userProjects.stream()
@@ -46,8 +49,15 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "projects", key = "#projectId")
+    public ProjectEntity getProjectById(Long projectId) {
+        log.debug("Getting project by id: {}", projectId);
+        return serviceHelper.getProjectOrThrowException(projectId);
+    }
+
+    @CacheEvict(value = "projects", key = "#currentUsername")
     @Transactional
-    public ProjectDto createProject(String name) {
+    public ProjectDto createProject(String name, String currentUsername) {
         log.info("Creating project with name: {}", name);
 
         if (name.trim().isEmpty()) {
@@ -57,10 +67,9 @@ public class ProjectService {
         projectRepository
                 .findByName(name)
                 .ifPresent(project -> {
-                    throw new BadRequestException(String.format("Project \"%s\" already exists.", name), HttpStatus.BAD_REQUEST);
+                    throw new BadRequestException(
+                            String.format("Project \"%s\" already exists.", name), HttpStatus.BAD_REQUEST);
                 });
-
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         UserEntity admin = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> (new NotFoundException("User not found", HttpStatus.BAD_REQUEST)));
@@ -77,29 +86,32 @@ public class ProjectService {
         return projectDtoFactory.makeProjectDto(project);
     }
 
+    @CacheEvict(value = "projects", key = "#projectId")
     @Transactional
-    public ProjectDto editProject(Long projectId, String name) {
-        log.info("Editing project with ID: {} to new name: {}", projectId, name);
+    public ProjectDto editProject(Long projectId, String newProjectName) {
+        log.info("Editing project with ID: {} to new name: {}", projectId, newProjectName);
 
-        if (name.trim().isEmpty()) {
+        if (newProjectName.trim().isEmpty()) {
             throw new BadRequestException("Name can't be empty", HttpStatus.BAD_REQUEST);
         }
 
         ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
 
         projectRepository
-                .findByName(name)
+                .findByName(newProjectName)
                 .filter(anotherProject -> !Objects.equals(anotherProject.getId(), projectId))
                 .ifPresent(anotherProject -> {
-                    throw new BadRequestException(String.format("Project \"%s\" already exists.", name), HttpStatus.BAD_REQUEST);
+                    throw new BadRequestException(
+                            String.format("Project \"%s\" already exists.", newProjectName), HttpStatus.BAD_REQUEST);
                 });
 
-        project.setName(name);
+        project.setName(newProjectName);
         project = projectRepository.saveAndFlush(project);
 
         return projectDtoFactory.makeProjectDto(project);
     }
 
+    @CacheEvict(value = "projects", key = "#projectId")
     @Transactional
     public AckDto deleteProject(Long projectId) {
         log.warn("Deleting project with ID: {}", projectId);
@@ -108,6 +120,7 @@ public class ProjectService {
         return AckDto.makeDefault(true);
     }
 
+    @CacheEvict(value = "projects", key = "#projectId")
     @Transactional
     public AckDto removeUserFromProject(Long projectId, String username) {
         log.warn("Removing user {} from project with ID: {}", username, projectId);
@@ -131,24 +144,6 @@ public class ProjectService {
         return AckDto.builder().answer(true).build();
     }
 
-    public List<ProjectEntity> findUserProjects(UserEntity user) {
-        List<ProjectEntity> ownedProjects = projectRepository.findAllByAdmin(user);
-        List<ProjectEntity> memberProjects = projectRepository.findAllByUsersContaining(user);
-
-        Set<ProjectEntity> userProjects = new HashSet<>(ownedProjects);
-        userProjects.addAll(memberProjects);
-
-        return new ArrayList<>(userProjects);
-    }
-
-    public ProjectEntity getProjectById(Long projectId) {
-        return serviceHelper.getProjectOrThrowException(projectId);
-    }
-
-    public boolean isAdmin(UserEntity user, ProjectEntity project) {
-        return project.getAdmin().equals(user);
-    }
-
     private void assignProjectAdminRole(UserEntity admin, ProjectEntity project) {
         RoleEntity projectAdminRole = serviceHelper.getAdminRoleOrThrowException();
 
@@ -159,5 +154,19 @@ public class ProjectService {
                 .build();
 
         projectRoleRepository.save(projectRole);
+    }
+
+    public List<ProjectEntity> findUserProjects(UserEntity user) {
+        List<ProjectEntity> ownedProjects = projectRepository.findAllByAdmin(user);
+        List<ProjectEntity> memberProjects = projectRepository.findAllByUsersContaining(user);
+
+        Set<ProjectEntity> userProjects = new HashSet<>(ownedProjects);
+        userProjects.addAll(memberProjects);
+
+        return new ArrayList<>(userProjects);
+    }
+
+    public boolean isAdmin(UserEntity user, ProjectEntity project) {
+        return project.getAdmin().equals(user);
     }
 }

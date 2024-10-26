@@ -37,15 +37,16 @@ public class ProjectController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(GET_PROJECTS)
-    public List<ProjectDto> getProjects() {
-       return projectService.getProjects();
+    public List<ProjectDto> getProjects(Principal principal) {
+        log.info("Getting all projects");
+        return projectService.getProjects(principal.getName());
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(CREATE_PROJECT)
-    public ProjectDto createProject(@RequestParam String name) {
+    public ProjectDto createProject(@RequestParam String name, Principal principal) {
         log.info("Creating project with name: {}", name);
-       return projectService.createProject(name);
+        return projectService.createProject(name, principal.getName());
     }
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
@@ -74,13 +75,12 @@ public class ProjectController {
     public InvitationDto sendInvitation(@PathVariable("project_id") Long projectId,
                                         @RequestParam String username,
                                         Principal principal) {
-
         log.info("User {} is inviting {} to project with ID: {}", principal.getName(), username, projectId);
 
         UserEntity invitingAdmin = userService.findByUsername(principal.getName());
-
         ProjectEntity project = projectService.getProjectById(projectId);
-        if(!projectService.isAdmin(invitingAdmin, project)) {
+
+        if (!projectService.isAdmin(invitingAdmin, project)) {
             throw new BadRequestException("Only project admin can send invitations.", HttpStatus.BAD_REQUEST);
         }
 

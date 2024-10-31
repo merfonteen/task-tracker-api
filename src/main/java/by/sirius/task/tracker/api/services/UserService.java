@@ -1,6 +1,6 @@
 package by.sirius.task.tracker.api.services;
 
-import by.sirius.task.tracker.api.dto.AuthRequestDto;
+import by.sirius.task.tracker.api.dto.RegisterRequestDto;
 import by.sirius.task.tracker.api.dto.RoleDto;
 import by.sirius.task.tracker.api.dto.UserDto;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
@@ -44,12 +44,12 @@ public class UserService {
     }
 
     @Transactional
-    public UserEntity createNewUser(AuthRequestDto authRequestDto) {
+    public UserEntity createNewUser(RegisterRequestDto registerRequestDto) {
         log.info("Creating user for register...");
         UserEntity user = new UserEntity();
-        user.setEmail(authRequestDto.getEmail());
-        user.setUsername(authRequestDto.getUsername());
-        user.setPassword(passwordEncoder.encode(authRequestDto.getPassword()));
+        user.setEmail(registerRequestDto.getEmail());
+        user.setUsername(registerRequestDto.getUsername());
+        user.setPassword(passwordEncoder.encode(registerRequestDto.getPassword()));
         user.setRoles(List.of(roleService.getAdminRole()));
         user.setEnabled(true);
         return userRepository.saveAndFlush(user);

@@ -1,17 +1,27 @@
 package by.sirius.task.tracker.store.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.apache.catalina.User;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
-@Data
 @Table(name = "users")
-public class UserEntity {
+public class UserEntity implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

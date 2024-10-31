@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.scheduling.config.Task;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,11 @@ import java.util.Optional;
 @Builder
 @Entity
 @Table(name = "task_states")
-public class TaskStateEntity {
+public class TaskStateEntity implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

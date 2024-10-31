@@ -1,6 +1,7 @@
 package by.sirius.task.tracker.api.services;
 
-import by.sirius.task.tracker.api.dto.AuthRequestDto;
+import by.sirius.task.tracker.api.dto.LoginRequestDto;
+import by.sirius.task.tracker.api.dto.RegisterRequestDto;
 import by.sirius.task.tracker.api.dto.AuthResponseDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.security.CustomUserDetailsService;
@@ -26,30 +27,30 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public ResponseEntity<?> register(AuthRequestDto authRequestDto) {
-        if (userRepository.existsByUsername(authRequestDto.getUsername())) {
+    public ResponseEntity<?> register(RegisterRequestDto registerRequestDto) {
+        if (userRepository.existsByUsername(registerRequestDto.getUsername())) {
             throw new BadRequestException("Username is already taken!", HttpStatus.BAD_REQUEST);
         }
 
-        if (userRepository.existsByEmail(authRequestDto.getEmail())) {
+        if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
             throw new BadRequestException("Email is already in use!", HttpStatus.BAD_REQUEST);
         }
 
-        UserEntity user = userService.createNewUser(authRequestDto);
+        UserEntity user = userService.createNewUser(registerRequestDto);
 
         return ResponseEntity.ok("User registered successfully!");
     }
 
-    public ResponseEntity<?> login(AuthRequestDto authRequest) {
+    public ResponseEntity<?> login(LoginRequestDto loginRequestDto) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+                    new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword()));
         }
         catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password!");
         }
 
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(authRequest.getUsername());
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequestDto.getUsername());
         String token = jwtTokenUtil.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthResponseDto(token));

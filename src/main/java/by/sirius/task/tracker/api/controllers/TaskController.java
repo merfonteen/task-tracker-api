@@ -2,8 +2,10 @@ package by.sirius.task.tracker.api.controllers;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskDto;
+import by.sirius.task.tracker.api.dto.TaskHistoryDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.services.ProjectSecurityService;
+import by.sirius.task.tracker.api.services.TaskHistoryService;
 import by.sirius.task.tracker.api.services.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +23,12 @@ import java.util.Optional;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskHistoryService taskHistoryService;
     private final ProjectSecurityService projectSecurityService;
 
     public static final String GET_TASKS = "/api/projects/{project_id}/task-states/{task_state_id}/tasks";
     public static final String GET_USER_TASKS = "/api/projects/{project_id}/users/{username}/tasks";
+    public static final String GET_TASK_HISTORY = "/api/tasks/{task_id}/history";
     public static final String CREATE_TASK = "/api/projects/{project_id}/task-states/{task_state_id}/tasks";
     public static final String EDIT_TASK = "/api/tasks/{task_id}";
     public static final String DELETE_TASK = "/api/tasks/{task_id}";
@@ -52,6 +56,12 @@ public class TaskController {
         return taskService.getAssignedTasks(username);
     }
 
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
+    @GetMapping(GET_TASK_HISTORY)
+    public List<TaskHistoryDto> getTaskHistory(@PathVariable("task_id") Long taskId) {
+        return taskHistoryService.getTaskHistoryByTaskId(taskId);
+    }
+
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @PostMapping(CREATE_TASK)
     public TaskDto createTask(@PathVariable("project_id") Long projectId,
@@ -61,7 +71,7 @@ public class TaskController {
         return taskService.createTask(projectId, taskStateId, taskName);
     }
 
-    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
     @PatchMapping(EDIT_TASK)
     public TaskDto editTask(@PathVariable("task_id") Long taskId,
                             @RequestParam String taskName) {
@@ -69,7 +79,7 @@ public class TaskController {
         return taskService.editTask(taskId, taskName);
     }
 
-    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'WRITE')")
+    @PreAuthorize("@projectSecurityService.hasTaskPermission(#taskId, 'READ')")
     @DeleteMapping(DELETE_TASK)
     public AckDto deleteTask(@PathVariable("task_id") Long taskId) {
         log.warn("Deleting task with ID: {}", taskId);

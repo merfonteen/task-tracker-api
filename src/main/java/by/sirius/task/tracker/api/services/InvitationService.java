@@ -7,7 +7,8 @@ import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.api.factories.InvitationDtoFactory;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.*;
-import by.sirius.task.tracker.store.repositories.*;
+import by.sirius.task.tracker.store.repositories.InvitationRepository;
+import by.sirius.task.tracker.store.repositories.ProjectRoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -15,7 +16,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -89,6 +89,10 @@ public class InvitationService {
 
         InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
 
+        if(!invitation.getInvitingAdmin().getUsername().equals(username)) {
+            throw new BadRequestException("You cannot accept an invitation that is not yours", HttpStatus.BAD_REQUEST);
+        }
+
         if(invitation.getStatus().equals(InvitationStatus.DECLINED)) {
             throw new BadRequestException("This invitation has been declined", HttpStatus.BAD_REQUEST);
         }
@@ -121,6 +125,11 @@ public class InvitationService {
     public AckDto declineInvitation(Long invitationId, String username) {
 
         InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
+
+        if(!invitation.getInvitingAdmin().getUsername().equals(username)) {
+            throw new BadRequestException("You cannot decline an invitation that is not yours", HttpStatus.BAD_REQUEST);
+        }
+
         invitation.setStatus(InvitationStatus.DECLINED);
 
         invitationRepository.save(invitation);

@@ -28,6 +28,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis', version: '3.3.4'
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '3.3.4'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '3.3.5'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     implementation 'org.springframework.boot:spring-boot-starter-security'

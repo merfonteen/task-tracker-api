@@ -1,7 +1,9 @@
 package by.sirius.task.tracker.api.controllers;
 
-import by.sirius.task.tracker.api.dto.AuthRequestDto;
+import by.sirius.task.tracker.api.dto.LoginRequestDto;
+import by.sirius.task.tracker.api.dto.RegisterRequestDto;
 import by.sirius.task.tracker.api.services.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,12 +20,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRequestDto registerRequest) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
         return authService.register(registerRequest);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequestDto authRequest) {
-        return authService.login(authRequest);
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+        return authService.login(loginRequestDto);
     }
 }

@@ -6,10 +6,8 @@ import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.api.factories.TaskDtoFactory;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
-import by.sirius.task.tracker.store.entities.ProjectEntity;
-import by.sirius.task.tracker.store.entities.TaskEntity;
-import by.sirius.task.tracker.store.entities.TaskStateEntity;
-import by.sirius.task.tracker.store.entities.UserEntity;
+import by.sirius.task.tracker.store.entities.*;
+import by.sirius.task.tracker.store.repositories.TaskHistoryRepository;
 import by.sirius.task.tracker.store.repositories.TaskRepository;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
@@ -18,8 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +33,7 @@ public class TaskService {
     private final TaskDtoFactory taskDtoFactory;
     private final TaskRepository taskRepository;
     private final TaskStateRepository taskStateRepository;
+    private final TaskHistoryRepository taskHistoryRepository;
 
     private final ServiceHelper serviceHelper;
 
@@ -69,12 +70,16 @@ public class TaskService {
         log.info("Creating task '{}' in project ID: {} and task state ID: {}", taskName, projectId, taskStateId);
 
         if (taskName.isBlank()) {
-            throw new BadRequestException("Task name can't be empty.", HttpStatus.BAD_REQUEST);
+            throw new BadRequestException("Task name can't be empty", HttpStatus.BAD_REQUEST);
         }
 
-        serviceHelper.getProjectOrThrowException(projectId);
+        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
         TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
         Optional<TaskEntity> optionalAnotherTask = Optional.empty();
+
+        if(!project.getTaskStates().contains(taskState)) {
+            throw new NotFoundException("Project doesn't contain a such task state", HttpStatus.NOT_FOUND);
+        }
 
         for (TaskEntity task : taskState.getTasks()) {
             if (task.getName().equals(taskName)) {
@@ -110,9 +115,10 @@ public class TaskService {
     @Transactional
     public TaskDto editTask(Long taskId, String taskName) {
         log.info("Editing task ID: {}, new name: {}", taskId, taskName);
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         if (taskName.isBlank()) {
-            throw new BadRequestException("Task name can't be empty.", HttpStatus.BAD_REQUEST);
+            throw new BadRequestException("Task name can't be empty", HttpStatus.BAD_REQUEST);
         }
 
         TaskEntity taskToUpdate = serviceHelper.getTaskOrThrowException(taskId);
@@ -123,12 +129,24 @@ public class TaskService {
                 .filter(existingTask -> !existingTask.getId().equals(taskId))
                 .ifPresent(existingTask -> {
                     throw new BadRequestException(
-                            String.format("Task \"%s\" already exists in this task state.", taskName), HttpStatus.BAD_REQUEST);
+                            String.format("Task \"%s\" already exists in this task state", taskName), HttpStatus.BAD_REQUEST);
                 });
 
+        String oldTaskName = taskToUpdate.getName();
         taskToUpdate.setName(taskName);
 
-        TaskEntity updatedTask = taskRepository.saveAndFlush(taskToUpdate);
+        TaskEntity updatedTask = taskRepository.save(taskToUpdate);
+
+        TaskHistoryEntity taskHistory = TaskHistoryEntity.builder()
+                .task(updatedTask)
+                .username(currentUsername)
+                .changeType("EDIT")
+                .fieldName("name")
+                .oldValue(oldTaskName)
+                .newValue(updatedTask.getName())
+                .build();
+
+        taskHistoryRepository.save(taskHistory);
 
         return taskDtoFactory.makeTaskDto(updatedTask);
     }
@@ -137,6 +155,7 @@ public class TaskService {
     @Transactional
     public AckDto deleteTask(Long taskId) {
         log.warn("Deleting task with ID: {}", taskId);
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         TaskEntity taskToDelete = serviceHelper.getTaskOrThrowException(taskId);
         serviceHelper.replaceOldTaskPosition(taskToDelete);
@@ -144,7 +163,14 @@ public class TaskService {
         TaskStateEntity taskState = taskToDelete.getTaskStateEntity();
         taskState.getTasks().remove(taskToDelete);
 
-        taskStateRepository.saveAndFlush(taskState);
+        TaskHistoryEntity taskHistory = TaskHistoryEntity.builder()
+                .task(taskToDelete)
+                .username(currentUsername)
+                .changeType("DELETE")
+                .build();
+
+        taskHistoryRepository.save(taskHistory);
+        taskStateRepository.save(taskState);
         taskRepository.delete(taskToDelete);
 
         return AckDto.builder().answer(true).build();
@@ -154,6 +180,7 @@ public class TaskService {
     @Transactional
     public TaskDto changeTaskPosition(Long taskId, Optional<Long> optionalLeftTaskId) {
         log.info("Changing task position for task ID: {} with left task ID: {}", taskId, optionalLeftTaskId.orElse(null));
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         TaskEntity changeTask = serviceHelper.getTaskOrThrowException(taskId);
         TaskStateEntity taskState = changeTask.getTaskStateEntity();
@@ -171,14 +198,14 @@ public class TaskService {
 
                     if (taskId.equals(leftTaskId)) {
                         throw new BadRequestException(
-                                "Left task id equals changed task.", HttpStatus.BAD_REQUEST);
+                                "Left task id equals changed task", HttpStatus.BAD_REQUEST);
                     }
 
                     TaskEntity leftTaskEntity = serviceHelper.getTaskOrThrowException(leftTaskId);
 
                     if (!taskState.getId().equals(leftTaskEntity.getTaskStateEntity().getId())) {
                         throw new BadRequestException(
-                                "Task position can be changed within the same task state.", HttpStatus.BAD_REQUEST);
+                                "Task position can be changed within the same task state", HttpStatus.BAD_REQUEST);
                     }
 
                     return leftTaskEntity;
@@ -223,7 +250,18 @@ public class TaskService {
         optionalNewRightTask
                 .ifPresent(taskRepository::saveAndFlush);
 
-        taskStateRepository.saveAndFlush(taskState);
+        taskStateRepository.save(taskState);
+
+        TaskHistoryEntity taskHistory = TaskHistoryEntity.builder()
+                .task(changeTask)
+                .username(currentUsername)
+                .changeType("EDIT")
+                .fieldName("task position")
+                .oldValue(optionalOldLeftTaskId.map(String::valueOf).orElse(null))
+                .newValue(optionalNewLeftTask.map(task -> String.valueOf(task.getId())).orElse(null))
+                .build();
+
+        taskHistoryRepository.save(taskHistory);
 
         return taskDtoFactory.makeTaskDto(changeTask);
     }
@@ -232,6 +270,7 @@ public class TaskService {
     @Transactional
     public TaskDto changeTaskState(Long taskId, Long newTaskStateId) {
         log.info("Changing task state for task ID: {} to new task state ID: {}", taskId, newTaskStateId);
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         TaskEntity taskToMove = serviceHelper.getTaskOrThrowException(taskId);
         TaskStateEntity newTaskState = serviceHelper.getTaskStateOrThrowException(newTaskStateId);
@@ -244,7 +283,7 @@ public class TaskService {
                 .findAny()
                 .ifPresent(existingTask -> {
                     throw new BadRequestException(
-                            String.format("Task state \"%s\" already contains  task name \"%s\".",
+                            String.format("Task state \"%s\" already contains  task name \"%s\"",
                                     newTaskState.getName(), taskToMove.getName()), HttpStatus.BAD_REQUEST);
                 });
 
@@ -270,8 +309,19 @@ public class TaskService {
 
         TaskEntity updatedTask = taskRepository.saveAndFlush(taskToMove);
 
-        taskStateRepository.saveAndFlush(currentTaskState);
-        taskStateRepository.saveAndFlush(newTaskState);
+        TaskHistoryEntity taskHistory = TaskHistoryEntity.builder()
+                .task(updatedTask)
+                .username(currentUsername)
+                .changeType("EDIT")
+                .fieldName("task state")
+                .oldValue(taskToMove.getTaskStateEntity().getName())
+                .newValue(updatedTask.getTaskStateEntity().getName())
+                .build();
+
+        taskHistoryRepository.save(taskHistory);
+
+        taskStateRepository.save(currentTaskState);
+        taskStateRepository.save(newTaskState);
 
         return taskDtoFactory.makeTaskDto(updatedTask);
     }
@@ -280,6 +330,7 @@ public class TaskService {
     @Transactional
     public TaskDto assignTaskToUser(Long taskId, String username) {
         log.info("Assigning task with ID: {} for user: {}", taskId, username);
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         TaskEntity task = serviceHelper.getTaskOrThrowException(taskId);
         TaskStateEntity taskState = task.getTaskStateEntity();
@@ -290,14 +341,27 @@ public class TaskService {
             throw new BadRequestException("Project doesn't contain user: " + username, HttpStatus.BAD_REQUEST);
         }
 
+        String usernameBefore = task.getAssignedUser().getUsername();
+
         task.setAssignedUser(user);
-        taskRepository.saveAndFlush(task);
+        taskRepository.save(task);
 
         emailService.sendEmail(
                 user.getEmail(),
                 "You have been assigned a task",
                 "You have been assigned to the task: " + task.getName()
         );
+
+        TaskHistoryEntity taskHistory = TaskHistoryEntity.builder()
+                .task(task)
+                .username(currentUsername)
+                .changeType("EDIT")
+                .fieldName("assigned user")
+                .oldValue(usernameBefore)
+                .newValue(task.getAssignedUser().getUsername())
+                .build();
+
+        taskHistoryRepository.save(taskHistory);
 
         return taskDtoFactory.makeTaskDto(task);
     }

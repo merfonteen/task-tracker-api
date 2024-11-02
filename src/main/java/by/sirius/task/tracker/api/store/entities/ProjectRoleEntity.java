@@ -1,11 +1,10 @@
-package by.sirius.task.tracker.store.entities;
+package by.sirius.task.tracker.api.store.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -14,8 +13,8 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "roles")
-public class RoleEntity implements Serializable {
+@Table(name = "project_roles")
+public class ProjectRoleEntity implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -23,16 +22,24 @@ public class RoleEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
 
-    @ManyToMany(mappedBy = "roles")
-    private List<UserEntity> users;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
+
+    @ManyToOne
+    @JoinColumn(name = "project_id")
+    private ProjectEntity project;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private RoleEntity role;
 
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
-        if(!(o instanceof RoleEntity)) return false;
-        RoleEntity that = (RoleEntity) o;
+        if(!(o instanceof ProjectRoleEntity)) return false;
+        ProjectRoleEntity that = (ProjectRoleEntity) o;
         return Objects.equals(that.id, id);
     }
 

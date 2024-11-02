@@ -1,6 +1,6 @@
-package by.sirius.task.tracker.security;
+package by.sirius.task.tracker.api.security;
 
-import by.sirius.task.tracker.store.entities.UserEntity;
+import by.sirius.task.tracker.api.store.entities.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

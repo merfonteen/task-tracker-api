@@ -1,10 +1,11 @@
 package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
-import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.api.services.helpers.ServiceHelper;
-import by.sirius.task.tracker.store.entities.*;
-import by.sirius.task.tracker.store.repositories.*;
+import by.sirius.task.tracker.api.store.entities.*;
+import by.sirius.task.tracker.api.store.repositories.ProjectRepository;
+import by.sirius.task.tracker.api.store.repositories.ProjectRoleRepository;
+import by.sirius.task.tracker.api.store.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;

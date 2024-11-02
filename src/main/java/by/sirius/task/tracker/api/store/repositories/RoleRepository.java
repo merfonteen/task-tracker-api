@@ -1,6 +1,6 @@
-package by.sirius.task.tracker.store.repositories;
+package by.sirius.task.tracker.api.store.repositories;
 
-import by.sirius.task.tracker.store.entities.RoleEntity;
+import by.sirius.task.tracker.api.store.entities.RoleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package by.sirius.task.tracker.store.entities;
+package by.sirius.task.tracker.api.store.entities;
 
 public enum InvitationStatus {
     SENT,

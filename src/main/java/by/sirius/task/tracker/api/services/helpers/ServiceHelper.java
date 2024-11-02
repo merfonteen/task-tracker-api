@@ -1,8 +1,8 @@
 package by.sirius.task.tracker.api.services.helpers;
 
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
-import by.sirius.task.tracker.store.entities.*;
-import by.sirius.task.tracker.store.repositories.*;
+import by.sirius.task.tracker.api.store.entities.*;
+import by.sirius.task.tracker.api.store.repositories.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

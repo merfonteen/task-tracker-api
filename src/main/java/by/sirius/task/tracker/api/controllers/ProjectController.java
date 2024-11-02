@@ -4,8 +4,8 @@ import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.InvitationDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
-import by.sirius.task.tracker.store.entities.ProjectEntity;
-import by.sirius.task.tracker.store.entities.UserEntity;
+import by.sirius.task.tracker.api.store.entities.ProjectEntity;
+import by.sirius.task.tracker.api.store.entities.UserEntity;
 import by.sirius.task.tracker.api.services.InvitationService;
 import by.sirius.task.tracker.api.services.ProjectService;
 import by.sirius.task.tracker.api.services.UserService;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController

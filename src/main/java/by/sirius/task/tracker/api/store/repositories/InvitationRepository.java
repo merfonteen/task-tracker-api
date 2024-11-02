@@ -1,9 +1,9 @@
-package by.sirius.task.tracker.store.repositories;
+package by.sirius.task.tracker.api.store.repositories;
 
-import by.sirius.task.tracker.store.entities.InvitationEntity;
-import by.sirius.task.tracker.store.entities.InvitationStatus;
-import by.sirius.task.tracker.store.entities.ProjectEntity;
-import by.sirius.task.tracker.store.entities.UserEntity;
+import by.sirius.task.tracker.api.store.entities.InvitationStatus;
+import by.sirius.task.tracker.api.store.entities.ProjectEntity;
+import by.sirius.task.tracker.api.store.entities.UserEntity;
+import by.sirius.task.tracker.api.store.entities.InvitationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

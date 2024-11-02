@@ -2,7 +2,7 @@ package by.sirius.task.tracker.api.factories;
 
 import by.sirius.task.tracker.api.dto.RoleDto;
 import by.sirius.task.tracker.api.dto.UserDto;
-import by.sirius.task.tracker.store.entities.UserEntity;
+import by.sirius.task.tracker.api.store.entities.UserEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

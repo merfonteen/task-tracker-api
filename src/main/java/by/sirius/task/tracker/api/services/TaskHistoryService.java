@@ -2,7 +2,7 @@ package by.sirius.task.tracker.api.services;
 
 import by.sirius.task.tracker.api.dto.TaskHistoryDto;
 import by.sirius.task.tracker.api.factories.TaskHistoryDtoFactory;
-import by.sirius.task.tracker.store.repositories.TaskHistoryRepository;
+import by.sirius.task.tracker.api.store.repositories.TaskHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

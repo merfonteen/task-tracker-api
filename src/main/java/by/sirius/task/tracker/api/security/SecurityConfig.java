@@ -1,4 +1,4 @@
-package by.sirius.task.tracker.security;
+package by.sirius.task.tracker.api.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

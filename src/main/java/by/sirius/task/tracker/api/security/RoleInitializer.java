@@ -1,7 +1,7 @@
-package by.sirius.task.tracker.security;
+package by.sirius.task.tracker.api.security;
 
-import by.sirius.task.tracker.store.entities.RoleEntity;
-import by.sirius.task.tracker.store.repositories.RoleRepository;
+import by.sirius.task.tracker.api.store.entities.RoleEntity;
+import by.sirius.task.tracker.api.store.repositories.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

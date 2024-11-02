@@ -1,7 +1,7 @@
 package by.sirius.task.tracker.api.factories;
 
 import by.sirius.task.tracker.api.dto.TaskStateDto;
-import by.sirius.task.tracker.store.entities.TaskStateEntity;
+import by.sirius.task.tracker.api.store.entities.TaskStateEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

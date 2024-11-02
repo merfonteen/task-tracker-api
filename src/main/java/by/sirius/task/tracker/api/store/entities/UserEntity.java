@@ -1,8 +1,7 @@
-package by.sirius.task.tracker.store.entities;
+package by.sirius.task.tracker.api.store.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.catalina.User;
 
 import java.io.Serial;
 import java.io.Serializable;

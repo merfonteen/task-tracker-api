@@ -1,7 +1,7 @@
 package by.sirius.task.tracker.api.factories;
 
 import by.sirius.task.tracker.api.dto.InvitationDto;
-import by.sirius.task.tracker.store.entities.InvitationEntity;
+import by.sirius.task.tracker.api.store.entities.InvitationEntity;
 import org.springframework.stereotype.Component;
 
 @Component

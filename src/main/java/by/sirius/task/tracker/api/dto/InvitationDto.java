@@ -1,6 +1,6 @@
 package by.sirius.task.tracker.api.dto;
 
-import by.sirius.task.tracker.store.entities.InvitationStatus;
+import by.sirius.task.tracker.api.store.entities.InvitationStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 

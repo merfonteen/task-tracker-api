@@ -1,7 +1,7 @@
-package by.sirius.task.tracker.security;
+package by.sirius.task.tracker.api.security;
 
-import by.sirius.task.tracker.store.entities.UserEntity;
-import by.sirius.task.tracker.store.repositories.UserRepository;
+import by.sirius.task.tracker.api.store.entities.UserEntity;
+import by.sirius.task.tracker.api.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

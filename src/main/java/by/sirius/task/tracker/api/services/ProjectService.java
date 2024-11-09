@@ -44,6 +44,8 @@ public class ProjectService {
         List<ProjectEntity> userProjects = findUserProjects(currentUser);
 
         return userProjects.stream()
+                .filter(project -> project.getId() != null)
+                .sorted(Comparator.comparing(ProjectEntity::getId))
                 .map(projectDtoFactory::makeProjectDto)
                 .collect(Collectors.toList());
     }
@@ -67,13 +69,13 @@ public class ProjectService {
                 .findByName(name)
                 .ifPresent(project -> {
                     throw new BadRequestException(
-                            String.format("Project \"%s\" already exists.", name), HttpStatus.BAD_REQUEST);
+                            String.format("Project \"%s\" already exists", name), HttpStatus.BAD_REQUEST);
                 });
 
         UserEntity admin = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> (new NotFoundException("User not found", HttpStatus.BAD_REQUEST)));
 
-        ProjectEntity project = projectRepository.saveAndFlush(
+        ProjectEntity project = projectRepository.save(
                 ProjectEntity.builder()
                         .name(name)
                         .admin(admin)
@@ -105,9 +107,10 @@ public class ProjectService {
                 });
 
         project.setName(newProjectName);
-        project = projectRepository.saveAndFlush(project);
 
-        return projectDtoFactory.makeProjectDto(project);
+        ProjectEntity updatedProject = projectRepository.save(project);
+
+        return projectDtoFactory.makeProjectDto(updatedProject);
     }
 
     @CacheEvict(value = "projects", key = "#projectId")
@@ -155,14 +158,11 @@ public class ProjectService {
         projectRoleRepository.save(projectRole);
     }
 
-    public List<ProjectEntity> findUserProjects(UserEntity user) {
-        List<ProjectEntity> ownedProjects = projectRepository.findAllByAdmin(user);
-        List<ProjectEntity> memberProjects = projectRepository.findAllByUsersContaining(user);
-
-        Set<ProjectEntity> userProjects = new HashSet<>(ownedProjects);
-        userProjects.addAll(memberProjects);
-
-        return new ArrayList<>(userProjects);
+    private List<ProjectEntity> findUserProjects(UserEntity user) {
+        List<ProjectEntity> allProjects = new ArrayList<>();
+        allProjects.addAll(projectRepository.findAllByAdmin(user));
+        allProjects.addAll(projectRepository.findAllByUsersContaining(user));
+        return allProjects;
     }
 
     public boolean isAdmin(UserEntity user, ProjectEntity project) {

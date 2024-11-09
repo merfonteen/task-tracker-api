@@ -24,12 +24,14 @@ spring:
 
   cache:
     type: redis
+    redis:
+      time-to-live: 3600s
+
   data:
     redis:
       host: localhost
       port: 6379
       password: ""
-      timeout: 3600s
       repositories:
         enabled: false
 

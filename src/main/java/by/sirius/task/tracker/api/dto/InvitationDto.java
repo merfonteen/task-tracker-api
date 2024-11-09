@@ -4,11 +4,13 @@ import by.sirius.task.tracker.api.store.entities.InvitationStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class InvitationDto {
+public class InvitationDto implements Serializable {
     @NonNull
     private Long id;
 

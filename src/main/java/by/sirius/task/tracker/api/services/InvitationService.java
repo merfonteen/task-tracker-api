@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class InvitationService {
 
     private final ServiceHelper serviceHelper;
 
+    @Async
     @Cacheable(value = "invitations", key = "#username")
     public List<InvitationDto> getUserInvitations(String username) {
 
@@ -89,7 +91,7 @@ public class InvitationService {
 
         InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
 
-        if(!invitation.getInvitingAdmin().getUsername().equals(username)) {
+        if(!invitation.getInvitedUser().getUsername().equals(username)) {
             throw new BadRequestException("You cannot accept an invitation that is not yours", HttpStatus.BAD_REQUEST);
         }
 

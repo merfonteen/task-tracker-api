@@ -13,7 +13,7 @@ public class RoleInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         if (roleRepository.findByName("ROLE_USER").isEmpty()) {
             RoleEntity userRole = new RoleEntity();
             userRole.setName("ROLE_USER");

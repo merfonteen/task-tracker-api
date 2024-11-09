@@ -3,6 +3,7 @@ package by.sirius.task.tracker.api.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TaskStateDto {
+public class TaskStateDto implements Serializable {
     @NonNull
     private Long id;
 

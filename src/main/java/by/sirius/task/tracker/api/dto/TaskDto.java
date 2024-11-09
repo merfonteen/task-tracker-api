@@ -3,13 +3,14 @@ package by.sirius.task.tracker.api.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TaskDto {
+public class TaskDto implements Serializable {
     @NonNull
     private Long id;
 

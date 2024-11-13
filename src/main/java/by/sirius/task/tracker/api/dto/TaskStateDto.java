@@ -12,10 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskStateDto implements Serializable {
-    @NonNull
+
     private Long id;
 
-    @NonNull
     private String name;
 
     @JsonProperty("left_task_state_id")
@@ -24,10 +23,9 @@ public class TaskStateDto implements Serializable {
     @JsonProperty("right_task_state_id")
     private Long rightTaskStateId;
 
-    @NonNull
     @JsonProperty("created_at")
     private Instant createdAt;
 
-    @NonNull
     private List<TaskDto> tasks;
+
 }

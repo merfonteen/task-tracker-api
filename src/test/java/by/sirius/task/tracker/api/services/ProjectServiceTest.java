@@ -250,7 +250,8 @@ class ProjectServiceTest {
 
         when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
                 new NotFoundException(
-                        String.format("Project with \"%d\" id doesn't exist", projectId), HttpStatus.NOT_FOUND));
+                        String.format("Project with \"%d\" id doesn't exist", projectId), HttpStatus.NOT_FOUND)
+        );
 
         assertThrows(NotFoundException.class, () -> projectService.editProject(projectId, newProjectName));
         verify(projectRepository, never()).save(any());
@@ -279,7 +280,8 @@ class ProjectServiceTest {
 
         when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
                 new NotFoundException(
-                        String.format("Project with \"%d\" id doesn't exist", projectId), HttpStatus.NOT_FOUND));
+                        String.format("Project with \"%d\" id doesn't exist", projectId), HttpStatus.NOT_FOUND)
+        );
 
         assertThrows(NotFoundException.class, () -> projectService.deleteProject(projectId));
         verify(projectRepository, never()).deleteById(projectId);

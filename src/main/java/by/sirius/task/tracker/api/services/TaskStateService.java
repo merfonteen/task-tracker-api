@@ -66,7 +66,7 @@ public class TaskStateService {
             }
         }
 
-        TaskStateEntity taskState = taskStateRepository.saveAndFlush(
+        TaskStateEntity taskState = taskStateRepository.save(
                 TaskStateEntity.builder()
                         .name(taskStateName)
                         .project(project)
@@ -77,10 +77,10 @@ public class TaskStateService {
                 .ifPresent(anotherTaskState -> {
                     taskState.setLeftTaskState(anotherTaskState);
                     anotherTaskState.setRightTaskState(taskState);
-                    taskStateRepository.saveAndFlush(anotherTaskState);
+                    taskStateRepository.save(anotherTaskState);
                 });
 
-        final TaskStateEntity savedTaskState = taskStateRepository.saveAndFlush(taskState);
+        final TaskStateEntity savedTaskState = taskStateRepository.save(taskState);
 
         return taskStateDtoFactory.makeTaskStateDto(savedTaskState);
     }
@@ -108,7 +108,7 @@ public class TaskStateService {
                 });
 
         taskState.setName(taskStateName);
-        taskState = taskStateRepository.saveAndFlush(taskState);
+        taskState = taskStateRepository.save(taskState);
 
         return taskStateDtoFactory.makeTaskStateDto(taskState);
     }
@@ -121,7 +121,7 @@ public class TaskStateService {
         TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
 
         serviceHelper.replaceOldTaskStatePosition(changeTaskState);
-        taskStateRepository.delete(changeTaskState);
+        taskStateRepository.deleteById(taskStateId);
 
         return AckDto.builder().answer(true).build();
     }
@@ -129,7 +129,8 @@ public class TaskStateService {
     @CacheEvict(value = "taskStates", key = "#taskStateId")
     @Transactional
     public TaskStateDto changeTaskStatePosition(Long taskStateId, Optional<Long> optionalLeftTaskStateId) {
-        log.info("Changing task state position for task state ID: {}, left state ID: {}", taskStateId, optionalLeftTaskStateId.orElse(null));
+        log.info("Changing task state position for task state ID: {}, left state ID: {}",
+                taskStateId, optionalLeftTaskStateId.orElse(null));
 
         TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
         ProjectEntity project = changeTaskState.getProject();
@@ -192,13 +193,13 @@ public class TaskStateService {
             changeTaskState.setRightTaskState(null);
         }
 
-        changeTaskState = taskStateRepository.saveAndFlush(changeTaskState);
+        changeTaskState = taskStateRepository.save(changeTaskState);
 
         optionalNewLeftTaskState
-                .ifPresent(taskStateRepository::saveAndFlush);
+                .ifPresent(taskStateRepository::save);
 
         optionalNewRightTaskState
-                .ifPresent(taskStateRepository::saveAndFlush);
+                .ifPresent(taskStateRepository::save);
 
         return taskStateDtoFactory.makeTaskStateDto(changeTaskState);
     }

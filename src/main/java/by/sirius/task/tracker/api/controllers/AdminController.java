@@ -1,8 +1,7 @@
 package by.sirius.task.tracker.api.controllers;
 
-import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.UserDto;
-import by.sirius.task.tracker.api.services.UserService;
+import by.sirius.task.tracker.core.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

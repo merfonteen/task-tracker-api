@@ -2,7 +2,7 @@ package by.sirius.task.tracker.api.controllers;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskStateDto;
-import by.sirius.task.tracker.api.services.TaskStateService;
+import by.sirius.task.tracker.core.services.TaskStateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;

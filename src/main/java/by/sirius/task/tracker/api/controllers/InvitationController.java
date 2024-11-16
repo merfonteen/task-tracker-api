@@ -2,7 +2,7 @@ package by.sirius.task.tracker.api.controllers;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.InvitationDto;
-import by.sirius.task.tracker.api.services.InvitationService;
+import by.sirius.task.tracker.core.services.InvitationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

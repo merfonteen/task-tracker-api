@@ -2,7 +2,7 @@ package by.sirius.task.tracker.api.controllers;
 
 import by.sirius.task.tracker.api.dto.LoginRequestDto;
 import by.sirius.task.tracker.api.dto.RegisterRequestDto;
-import by.sirius.task.tracker.api.services.AuthService;
+import by.sirius.task.tracker.core.services.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

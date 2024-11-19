@@ -179,7 +179,8 @@ public class TaskService {
     @CacheEvict(value = "tasks", key = "#taskId")
     @Transactional
     public TaskDto changeTaskPosition(Long taskId, Optional<Long> optionalLeftTaskId) {
-        log.info("Changing task position for task ID: {} with left task ID: {}", taskId, optionalLeftTaskId.orElse(null));
+        log.info("Changing task position for task ID: {} with left task ID: {}",
+                taskId, optionalLeftTaskId.orElse(null));
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
         TaskEntity changeTask = serviceHelper.getTaskOrThrowException(taskId);
@@ -205,7 +206,7 @@ public class TaskService {
 
                     if (!taskState.getId().equals(leftTaskEntity.getTaskState().getId())) {
                         throw new BadRequestException(
-                                "Task position can be changed within the same task state", HttpStatus.BAD_REQUEST);
+                                "Task position can only be changed within the same task state", HttpStatus.BAD_REQUEST);
                     }
 
                     return leftTaskEntity;
@@ -242,13 +243,13 @@ public class TaskService {
             changeTask.setRightTask(null);
         }
 
-        changeTask = taskRepository.saveAndFlush(changeTask);
+        changeTask = taskRepository.save(changeTask);
 
         optionalNewLeftTask
-                .ifPresent(taskRepository::saveAndFlush);
+                .ifPresent(taskRepository::save);
 
         optionalNewRightTask
-                .ifPresent(taskRepository::saveAndFlush);
+                .ifPresent(taskRepository::save);
 
         taskStateRepository.save(taskState);
 
@@ -299,7 +300,7 @@ public class TaskService {
         optionalLastTaskInNewState.ifPresent(lastTask -> {
             lastTask.setRightTask(taskToMove);
             taskToMove.setLeftTask(lastTask);
-            taskRepository.saveAndFlush(lastTask);
+            taskRepository.save(lastTask);
         });
 
         taskToMove.setRightTask(null);
@@ -307,7 +308,7 @@ public class TaskService {
 
         newTaskState.getTasks().add(taskToMove);
 
-        TaskEntity updatedTask = taskRepository.saveAndFlush(taskToMove);
+        TaskEntity updatedTask = taskRepository.save(taskToMove);
 
         TaskHistoryEntity taskHistory = TaskHistoryEntity.builder()
                 .task(updatedTask)
@@ -319,7 +320,6 @@ public class TaskService {
                 .build();
 
         taskHistoryRepository.save(taskHistory);
-
         taskStateRepository.save(currentTaskState);
         taskStateRepository.save(newTaskState);
 

@@ -1,4 +1,4 @@
-package by.sirius.task.tracker.api.services;
+package by.sirius.task.tracker.core.services;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;

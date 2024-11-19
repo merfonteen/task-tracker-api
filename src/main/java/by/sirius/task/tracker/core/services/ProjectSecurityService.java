@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 public class ProjectSecurityService {
 
     private final ServiceHelper serviceHelper;
-    private final UserRepository userRepository;
-    private final ProjectRepository projectRepository;
     private final ProjectRoleRepository projectRoleRepository;
 
     public boolean hasProjectPermission(Long projectId, String permissionType) {

@@ -1,11 +1,10 @@
-package by.sirius.task.tracker.api.services;
+package by.sirius.task.tracker.core.services;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskStateDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.core.factories.TaskStateDtoFactory;
-import by.sirius.task.tracker.core.services.TaskStateService;
 import by.sirius.task.tracker.core.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
 import by.sirius.task.tracker.store.entities.TaskStateEntity;
@@ -23,7 +22,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TaskStateServiceTest {

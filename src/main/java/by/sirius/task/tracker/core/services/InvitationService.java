@@ -3,7 +3,6 @@ package by.sirius.task.tracker.core.services;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.InvitationDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
-import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.core.factories.InvitationDtoFactory;
 import by.sirius.task.tracker.core.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.*;
@@ -36,10 +35,6 @@ public class InvitationService {
 
        List<InvitationEntity> allInvitations = invitationRepository.findAllByInvitedUser_username(username);
 
-        if(allInvitations.isEmpty()) {
-            throw new NotFoundException("There are no invitations.", HttpStatus.NOT_FOUND);
-        }
-
         return allInvitations.stream()
                 .map(invitation -> new InvitationDto(
                         invitation.getId(),
@@ -62,7 +57,7 @@ public class InvitationService {
                 .findByInvitedUserAndProjectAndStatus(user, project, InvitationStatus.SENT);
 
         if (existingInvitation.isPresent()) {
-            throw new BadRequestException("Invitation has already sent.", HttpStatus.BAD_REQUEST);
+            throw new BadRequestException("The user has already received an invitation from you", HttpStatus.BAD_REQUEST);
         }
 
         InvitationEntity invitation = InvitationEntity.builder()
@@ -72,7 +67,7 @@ public class InvitationService {
                 .status(InvitationStatus.SENT)
                 .build();
 
-        InvitationEntity invitationToSave = invitationRepository.saveAndFlush(invitation);
+        InvitationEntity invitationToSave = invitationRepository.save(invitation);
 
         emailService.sendEmail(
                 user.getEmail(),

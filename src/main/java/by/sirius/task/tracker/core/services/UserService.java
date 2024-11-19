@@ -52,7 +52,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(registerRequestDto.getPassword()));
         user.setRoles(List.of(roleService.getAdminRole()));
         user.setEnabled(true);
-        return userRepository.saveAndFlush(user);
+        return userRepository.save(user);
     }
 
     public UserEntity findByUsername(String username) {

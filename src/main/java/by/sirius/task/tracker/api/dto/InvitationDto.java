@@ -11,17 +11,15 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InvitationDto implements Serializable {
-    @NonNull
+
     private Long id;
 
-    @NonNull
     @JsonProperty("inviting_admin")
     private String invitingAdmin;
 
-    @NonNull
     @JsonProperty("invited_user")
     private String invitedUser;
 
-    @NonNull
     private InvitationStatus status;
+
 }

@@ -65,6 +65,7 @@ public class ProjectSecurityService {
         if (permissionType.equals("WRITE") && projectUserRole.getRole().getName().equals("ROLE_ADMIN")) {
             return true;
         }
+
         if (permissionType.equals("READ")) {
             return true;
         }

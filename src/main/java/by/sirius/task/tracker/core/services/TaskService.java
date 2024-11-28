@@ -36,7 +36,6 @@ public class TaskService {
 
     private final ServiceHelper serviceHelper;
 
-    @Cacheable(value = "tasks", key = "#projectId + '-' + #taskStateId")
     public List<TaskDto> getTasks(Long projectId, Long taskStateId) {
         log.debug("Fetching tasks for project ID: {} and task state ID: {}", projectId, taskStateId);
 
@@ -51,7 +50,6 @@ public class TaskService {
                         String.format("Task state with id \"%d\" not found", taskStateId), HttpStatus.BAD_REQUEST));
     }
 
-    @Cacheable(value = "tasks", key = "#username")
     public List<TaskDto> getAssignedTasks(String username) {
         log.debug("Getting assigned for project user: {}", username);
 
@@ -63,7 +61,6 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(value = "tasks", key = "#projectId + '-' + #taskStateId")
     @Transactional
     public TaskDto createTask(Long projectId, Long taskStateId, String taskName) {
         log.info("Creating task '{}' in project ID: {} and task state ID: {}", taskName, projectId, taskStateId);
@@ -111,7 +108,6 @@ public class TaskService {
         return taskDtoFactory.makeTaskDto(task);
     }
 
-    @CacheEvict(value = "tasks", key = "#taskId")
     @Transactional
     public TaskDto editTask(Long taskId, String taskName) {
         log.info("Editing task ID: {}, new name: {}", taskId, taskName);
@@ -125,7 +121,7 @@ public class TaskService {
         Long taskStateId = taskToUpdate.getTaskState().getId();
 
         taskRepository
-                .findByTaskStateEntityIdAndNameIgnoreCase(taskStateId, taskName)
+                .findByTaskStateIdAndNameIgnoreCase(taskStateId, taskName)
                 .filter(existingTask -> !existingTask.getId().equals(taskId))
                 .ifPresent(existingTask -> {
                     throw new BadRequestException(
@@ -151,7 +147,6 @@ public class TaskService {
         return taskDtoFactory.makeTaskDto(updatedTask);
     }
 
-    @CacheEvict(value = "tasks", key = "#taskId")
     @Transactional
     public AckDto deleteTask(Long taskId) {
         log.warn("Deleting task with ID: {}", taskId);
@@ -176,7 +171,6 @@ public class TaskService {
         return AckDto.builder().answer(true).build();
     }
 
-    @CacheEvict(value = "tasks", key = "#taskId")
     @Transactional
     public TaskDto changeTaskPosition(Long taskId, Optional<Long> optionalLeftTaskId) {
         log.info("Changing task position for task ID: {} with left task ID: {}",
@@ -267,7 +261,6 @@ public class TaskService {
         return taskDtoFactory.makeTaskDto(changeTask);
     }
 
-    @CacheEvict(value = "tasks", key = "#taskId")
     @Transactional
     public TaskDto changeTaskState(Long taskId, Long newTaskStateId) {
         log.info("Changing task state for task ID: {} to new task state ID: {}", taskId, newTaskStateId);
@@ -326,7 +319,6 @@ public class TaskService {
         return taskDtoFactory.makeTaskDto(updatedTask);
     }
 
-    @CacheEvict(value = "tasks", allEntries = true)
     @Transactional
     public TaskDto assignTaskToUser(Long taskId, String username) {
         log.info("Assigning task with ID: {} for user: {}", taskId, username);

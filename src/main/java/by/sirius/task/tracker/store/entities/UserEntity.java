@@ -29,6 +29,7 @@ public class UserEntity implements Serializable {
     private String password;
     private Boolean enabled;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -37,9 +38,11 @@ public class UserEntity implements Serializable {
     )
     private List<RoleEntity> roles = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
     private List<ProjectEntity> ownedProjects = new ArrayList<>();
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "project_users",
@@ -48,6 +51,7 @@ public class UserEntity implements Serializable {
     )
     private List<ProjectEntity> memberProjects  = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectRoleEntity> projectRoles = new ArrayList<>();
 

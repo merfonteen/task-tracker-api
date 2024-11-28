@@ -41,9 +41,11 @@ public class ProjectEntity implements Serializable {
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     private List<TaskStateEntity> taskStates = new ArrayList<>();
 
+    @Builder.Default
     @ManyToMany(mappedBy = "memberProjects", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private List<UserEntity> users = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectRoleEntity> projectRoles = new ArrayList<>();
 

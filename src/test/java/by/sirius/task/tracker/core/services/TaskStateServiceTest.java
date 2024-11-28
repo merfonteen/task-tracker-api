@@ -277,6 +277,8 @@ class TaskStateServiceTest {
         when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenThrow(
                 new NotFoundException("Task state not found", HttpStatus.NOT_FOUND)
         );
+
+        assertThrows(NotFoundException.class, () -> taskStateService.deleteTaskState(taskStateId));
     }
 
     @Test

@@ -36,7 +36,6 @@ public class ProjectService {
 
     private final ServiceHelper serviceHelper;
 
-    @Cacheable(value = "projects", key = "#currentUsername")
     public List<ProjectDto> getProjects(String currentUsername) {
         log.debug("Getting all projects");
 
@@ -50,13 +49,6 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "projects", key = "#projectId")
-    public ProjectEntity getProjectById(Long projectId) {
-        log.debug("Getting project by id: {}", projectId);
-        return serviceHelper.getProjectOrThrowException(projectId);
-    }
-
-    @CacheEvict(value = "projects", key = "#currentUsername")
     @Transactional
     public ProjectDto createProject(String name, String currentUsername) {
         log.info("Creating project with name: {}", name);
@@ -87,7 +79,6 @@ public class ProjectService {
         return projectDtoFactory.makeProjectDto(project);
     }
 
-    @CacheEvict(value = "projects", key = "#projectId")
     @Transactional
     public ProjectDto editProject(Long projectId, String newProjectName) {
         log.info("Editing project with ID: {} to new name: {}", projectId, newProjectName);
@@ -113,7 +104,6 @@ public class ProjectService {
         return projectDtoFactory.makeProjectDto(updatedProject);
     }
 
-    @CacheEvict(value = "projects", key = "#projectId")
     @Transactional
     public AckDto deleteProject(Long projectId) {
         log.warn("Deleting project with ID: {}", projectId);
@@ -122,7 +112,6 @@ public class ProjectService {
         return AckDto.makeDefault(true);
     }
 
-    @CacheEvict(value = "projects", key = "#projectId")
     @Transactional
     public AckDto removeUserFromProject(Long projectId, String username) {
         log.warn("Removing user {} from project with ID: {}", username, projectId);
@@ -144,6 +133,11 @@ public class ProjectService {
         }
 
         return AckDto.builder().answer(true).build();
+    }
+
+    public ProjectEntity getProjectById(Long projectId) {
+        log.debug("Getting project by id: {}", projectId);
+        return serviceHelper.getProjectOrThrowException(projectId);
     }
 
     private void assignProjectAdminRole(UserEntity admin, ProjectEntity project) {

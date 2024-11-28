@@ -10,6 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface TaskRepository extends JpaRepository<TaskEntity, Long> {
-    Optional<TaskEntity> findByTaskStateEntityIdAndNameIgnoreCase(Long taskStateId, String taskName);
+    Optional<TaskEntity> findByTaskStateIdAndNameIgnoreCase(Long taskStateId, String taskName);
     List<TaskEntity> findByAssignedUser(UserEntity assignedUser);
 }

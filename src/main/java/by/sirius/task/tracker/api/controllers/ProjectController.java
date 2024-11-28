@@ -50,7 +50,9 @@ public class ProjectController {
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @PatchMapping(EDIT_PROJECT)
-    public ProjectDto editProject(@PathVariable("project_id") Long projectId, @RequestParam String name) {
+    public ProjectDto editProject(@PathVariable("project_id") Long projectId,
+                                  @RequestParam String name,
+                                  Principal principal) {
         log.info("Editing project with ID: {}, new name: {}", projectId, name);
         return projectService.editProject(projectId, name);
     }

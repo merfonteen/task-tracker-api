@@ -288,7 +288,7 @@ class TaskServiceTest {
         when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
         when(taskRepository.save(any())).thenReturn(task);
         when(taskDtoFactory.makeTaskDto(task)).thenReturn(expected);
-        when(taskRepository.findByTaskStateEntityIdAndNameIgnoreCase(task.getTaskState().getId(), taskName))
+        when(taskRepository.findByTaskStateIdAndNameIgnoreCase(task.getTaskState().getId(), taskName))
                 .thenReturn(Optional.empty());
 
         TaskDto actual = taskService.editTask(taskId, taskName);
@@ -346,7 +346,7 @@ class TaskServiceTest {
                 .build();
 
         when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
-        when(taskRepository.findByTaskStateEntityIdAndNameIgnoreCase(task.getTaskState().getId(), newTaskName))
+        when(taskRepository.findByTaskStateIdAndNameIgnoreCase(task.getTaskState().getId(), newTaskName))
                 .thenReturn(Optional.of(existingTask));
 
         assertThrows(BadRequestException.class, () -> taskService.editTask(taskId, newTaskName));

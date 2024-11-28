@@ -30,7 +30,6 @@ public class TaskStateService {
 
     private final ServiceHelper serviceHelper;
 
-    @Cacheable(value = "taskStates", key = "#projectId")
     public List<TaskStateDto> getTaskStates(Long projectId) {
         log.debug("Fetching task states for project ID: {}", projectId);
 
@@ -43,7 +42,6 @@ public class TaskStateService {
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(value = "taskStates", key = "#projectId")
     @Transactional
     public TaskStateDto createTaskState(Long projectId, String taskStateName) {
         log.info("Creating task state '{}' in project with ID: {}", taskStateName, projectId);
@@ -85,7 +83,6 @@ public class TaskStateService {
         return taskStateDtoFactory.makeTaskStateDto(savedTaskState);
     }
 
-    @CacheEvict(value = "taskStates", key = "#taskStateId")
     @Transactional
     public TaskStateDto editTaskState(Long taskStateId, String taskStateName) {
         log.info("Editing task state with ID: {}, new name: {}", taskStateId, taskStateName);
@@ -113,7 +110,6 @@ public class TaskStateService {
         return taskStateDtoFactory.makeTaskStateDto(taskState);
     }
 
-    @CacheEvict(value = "taskStates", key = "#taskStateId")
     @Transactional
     public AckDto deleteTaskState(Long taskStateId) {
         log.warn("Deleting task state with ID: {}", taskStateId);
@@ -126,7 +122,6 @@ public class TaskStateService {
         return AckDto.builder().answer(true).build();
     }
 
-    @CacheEvict(value = "taskStates", key = "#taskStateId")
     @Transactional
     public TaskStateDto changeTaskStatePosition(Long taskStateId, Optional<Long> optionalLeftTaskStateId) {
         log.info("Changing task state position for task state ID: {}, left state ID: {}",

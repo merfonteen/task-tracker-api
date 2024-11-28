@@ -28,11 +28,11 @@ Task tracker is designed for small teams or individuals who need a lighweight ta
      cd task-tracker-api
    ````
    
-2. **Make sure you have the following installed:**
-     **Java 21:** [Download Java](https://adoptium.net/temurin/releases/)
-     **Docker and Docker Compose**: [Install Docker](https://www.docker.com/get-started)
+2. **Make sure you have the following installed:**   
+   **Java 21:** [Download Java](https://adoptium.net/temurin/releases/)   
+   **Docker and Docker Compose**: [Install Docker](https://www.docker.com/get-started)
 
-3. **Running the application without Docker:**
+3. **Running the application without Docker:**    
    Update the application.yml file with your PostgreSQL credentials.
    ```bash
     ./gradlew bootRun
@@ -52,8 +52,8 @@ Task tracker is designed for small teams or individuals who need a lighweight ta
    ```bash
      docker run -d -p 8080:8080 ixsirius/task-tracker-app:latest
 
-6. **Access the application at:**
-   **Web Application:** [http://localhost:8080](http://localhost:8080)
+6. **Access the application at:**  
+   **Web Application:** [http://localhost:8080](http://localhost:8080)  
    **API Documentation:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui.html)
 
 ## Examples of requrest to API
@@ -74,7 +74,7 @@ For most endpoints, you need to authenticate with a JWT token.
 ```
 
 ### Authorize a user:
-**POST** '/auth/login'
+**POST** `/auth/login`
 ```json
 {
   "username": "your username",
@@ -90,8 +90,8 @@ For most endpoints, you need to authenticate with a JWT token.
 ```
 
 ### Create a new task board:
-**POST** '/api/projects?name=TestName'
-**Headers:** Authorization: Bearer <your_token>
+**POST** `/api/projects?name=TestName`  
+**Headers:** `Authorization`: Bearer <your_token>
 
 **Response example:**
 ```json

@@ -15,8 +15,10 @@ Task tracker is designed for small teams or individuals who need a lighweight ta
   - Data
   - Security
 - **PostgreSQL**
+- **Hibernate**
 - **Gradle**
 - **JUnit 5**
+- **Mockito**
 - **Swagger** (for API documentation)
 - **Docker**
 

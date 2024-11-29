@@ -35,7 +35,7 @@ Task tracker is designed for small teams or individuals who need a lighweight ta
    **Docker and Docker Compose**: [Install Docker](https://www.docker.com/get-started)
 
 3. **Running the application without Docker:**    
-   Update the application.yml file with your PostgreSQL credentials.
+   Update the `application.yml` file with your PostgreSQL credentials.
    ```bash
     ./gradlew bootRun
    ````

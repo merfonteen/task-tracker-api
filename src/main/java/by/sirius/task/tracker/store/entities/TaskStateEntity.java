@@ -43,7 +43,7 @@ public class TaskStateEntity implements Serializable {
     private ProjectEntity project;
 
     @Builder.Default
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "task_state_id", referencedColumnName = "id")
     private List<TaskEntity> tasks = new ArrayList<>();
 

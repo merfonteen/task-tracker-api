@@ -37,7 +37,7 @@ public class ProjectEntity implements Serializable {
     private UserEntity admin;
 
     @Builder.Default
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "project_id", referencedColumnName = "id")
     private List<TaskStateEntity> taskStates = new ArrayList<>();
 

@@ -7,7 +7,7 @@ build/
 
 ### IntelliJ IDEA ###
 .idea
-.logs
+logs/
 *.iws
 *.iml
 *.ipr

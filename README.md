@@ -50,10 +50,6 @@ Task tracker is designed for small teams or individuals who need a lighweight ta
      docker-compose up
    ````
 
-   **Alternatively**, you can run the application directly from Docker Hub:
-   ```bash
-     docker run -d -p 8080:8080 ixsirius/task-tracker-app:latest
-
 6. **Access the application at:**  
    **Web Application:** [http://localhost:8080](http://localhost:8080)  
    **API Documentation:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui.html)

@@ -57,6 +57,9 @@ dependencies {
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Others
+    implementation group: 'io.github.cdimascio', name: 'dotenv-java', version: '3.0.0'
 }
 
 tasks.named('test') {

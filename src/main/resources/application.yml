@@ -1,35 +1,25 @@
-server:
-  port: 8080
+  server:
+    port: 8080
 
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/mypostgresql
-    username: postgres
-    password: 1234
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: "youremail@@gmail.com"
-    password: "your password"
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-
-logging:
-  level:
-    root: INFO
-    by.sirius.task.tracker: DEBUG
-  file:
-    name: logs/app.log
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  spring:
+    datasource:
+      url: ${DATABASE_URL}
+      username: ${DATABASE_USERNAME}
+      password: ${DATABASE_PASSWORD}
+      driver-class-name: org.postgresql.Driver
+    jpa:
+      hibernate:
+        ddl-auto: update
+      properties:
+        hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+    mail:
+      host: smtp.gmail.com
+      port: 587
+      username: ${SPRING_MAIL_USERNAME}
+      password: ${SPRING_MAIL_PASSWORD}
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true

@@ -1,16 +1,18 @@
 HELP.md
 .gradle
 build/
+/logs/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
 ### IntelliJ IDEA ###
 .idea
-logs/
 *.iws
 *.iml
 *.ipr
+*.log
+.env
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/

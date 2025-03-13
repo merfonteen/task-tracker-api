@@ -121,8 +121,8 @@ class TaskServiceTest {
                 .assignedUser(user.getUsername())
                 .build();
 
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
-        when(taskRepository.findByAssignedUser(user)).thenReturn(List.of(task));
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
+        when(taskRepository.findByAssignedUserId(user.getId())).thenReturn(List.of(task));
         when(taskDtoFactory.makeTaskDto(task)).thenReturn(taskDto);
 
         List<TaskDto> assignedTasks = taskService.getAssignedTasks(username);
@@ -135,7 +135,7 @@ class TaskServiceTest {
     void testGetAssignedTasks_WhenUserNotFound_ShouldThrowException() {
         String username = "username";
 
-        when(serviceHelper.getUserOrThrowException(username)).thenThrow(
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenThrow(
                 new NotFoundException("User not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.getAssignedTasks(username));
@@ -150,8 +150,8 @@ class TaskServiceTest {
                 .username(username)
                 .build();
 
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
-        when(taskRepository.findByAssignedUser(user)).thenReturn(Collections.emptyList());
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
+        when(taskRepository.findByAssignedUserId(user.getId())).thenReturn(Collections.emptyList());
 
         List<TaskDto> assignedTasks = taskService.getAssignedTasks(username);
 
@@ -185,8 +185,8 @@ class TaskServiceTest {
 
         project.getTaskStates().add(taskState);
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskState);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskState);
         when(taskRepository.save(any(TaskEntity.class))).thenReturn(task);
         when(taskDtoFactory.makeTaskDto(any(TaskEntity.class))).thenReturn(taskDto);
 
@@ -210,7 +210,7 @@ class TaskServiceTest {
         Long taskStateId = 1L;
         String taskName = "Task Name";
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.createTask(projectId, taskStateId, taskName));
@@ -230,8 +230,8 @@ class TaskServiceTest {
                 .id(taskStateId)
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskState);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskState);
 
         assertThrows(NotFoundException.class, () -> taskService.createTask(projectId, taskStateId, taskName));
     }
@@ -258,8 +258,8 @@ class TaskServiceTest {
 
         project.getTaskStates().add(taskState);
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskState);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskState);
 
         assertThrows(BadRequestException.class, () -> taskService.createTask(projectId, taskStateId, taskName));
     }
@@ -268,13 +268,23 @@ class TaskServiceTest {
     void testEditTask_Success() {
         Long taskId = 1L;
         String taskName = "New Task Name";
+        String username = "testUser";
+
+        UserEntity user = UserEntity.builder()
+                .username(username)
+                .build();
 
         TaskEntity task = TaskEntity.builder()
                 .id(taskId)
                 .name("oldName")
+                .assignedUser(user)
                 .taskState(
                         TaskStateEntity.builder()
                                 .id(1L)
+                                .project(ProjectEntity.builder()
+                                        .id(1L)
+                                        .admin(user)
+                                        .build())
                                 .build())
                 .build();
 
@@ -285,7 +295,7 @@ class TaskServiceTest {
 
         initSecurityContext();
 
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(task);
         when(taskRepository.save(any())).thenReturn(task);
         when(taskDtoFactory.makeTaskDto(task)).thenReturn(expected);
         when(taskRepository.findByTaskStateIdAndNameIgnoreCase(task.getTaskState().getId(), taskName))
@@ -316,7 +326,7 @@ class TaskServiceTest {
 
         initSecurityContext();
 
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenThrow(
                 new NotFoundException("Task not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.editTask(taskId, newTaskName));
@@ -327,27 +337,30 @@ class TaskServiceTest {
     void testEditTask_WhenTaskNameAlreadyExists_ShouldThrowException() {
         Long taskId = 1L;
         String newTaskName = "New Task Name";
+        String username = "testUsername";
 
         initSecurityContext();
+
+        UserEntity user = UserEntity.builder()
+                .username(username)
+                .build();
 
         TaskEntity task = TaskEntity.builder()
                 .id(taskId)
                 .name("oldName")
+                .assignedUser(user)
                 .taskState(
                         TaskStateEntity.builder()
                                 .id(1L)
+                                .project(ProjectEntity.builder()
+                                        .id(1L)
+                                        .admin(user)
+                                        .build())
                                 .build()
                 )
                 .build();
 
-        TaskEntity existingTask = TaskEntity.builder()
-                .id(2L)
-                .name(newTaskName)
-                .build();
-
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
-        when(taskRepository.findByTaskStateIdAndNameIgnoreCase(task.getTaskState().getId(), newTaskName))
-                .thenReturn(Optional.of(existingTask));
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(task);
 
         assertThrows(BadRequestException.class, () -> taskService.editTask(taskId, newTaskName));
         verify(taskRepository, never()).save(any(TaskEntity.class));
@@ -356,21 +369,32 @@ class TaskServiceTest {
     @Test
     void testDeleteTask_Success() {
         Long taskId = 1L;
+        String username = "testUser";
+
+        UserEntity user = UserEntity.builder()
+                .id(1L)
+                .username(username)
+                .build();
 
         TaskEntity taskToDelete = TaskEntity.builder()
                 .id(taskId)
                 .name("Task Name")
+                .assignedUser(user)
                 .build();
 
         TaskStateEntity taskState = TaskStateEntity.builder()
                 .id(1L)
                 .tasks(new ArrayList<>(List.of(taskToDelete)))
+                .project(ProjectEntity.builder()
+                        .id(1L)
+                        .admin(user)
+                        .build())
                 .build();
 
         taskToDelete.setTaskState(taskState);
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToDelete);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToDelete);
 
         AckDto result = taskService.deleteTask(taskId);
 
@@ -389,7 +413,7 @@ class TaskServiceTest {
 
         initSecurityContext();
 
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenThrow(
                 new NotFoundException("Task not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.deleteTask(taskId));
@@ -420,8 +444,8 @@ class TaskServiceTest {
 
         initSecurityContext();
 
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
-        when(serviceHelper.getTaskOrThrowException(leftTaskId)).thenReturn(leftTask);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskByIdOrThrowException(leftTaskId)).thenReturn(leftTask);
         when(taskRepository.save(taskToMove)).thenReturn(taskToMove);
         when(taskDtoFactory.makeTaskDto(taskToMove)).thenReturn(
                 TaskDto.builder()
@@ -463,7 +487,7 @@ class TaskServiceTest {
         taskToMove.setLeftTask(leftTask);
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
         when(taskDtoFactory.makeTaskDto(taskToMove)).thenReturn(expectedDto);
 
         TaskDto result = taskService.changeTaskPosition(taskId, Optional.of(leftTaskId));
@@ -478,7 +502,7 @@ class TaskServiceTest {
         Long taskId = 1L;
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(TaskEntity.builder().id(taskId).build());
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(TaskEntity.builder().id(taskId).build());
 
         assertThrows(BadRequestException.class, () -> taskService.changeTaskPosition(taskId, Optional.of(taskId)));
 
@@ -505,8 +529,8 @@ class TaskServiceTest {
         leftTask.setTaskState(taskState2);
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
-        when(serviceHelper.getTaskOrThrowException(leftTaskId)).thenReturn(leftTask);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskByIdOrThrowException(leftTaskId)).thenReturn(leftTask);
 
         assertThrows(BadRequestException.class, () -> taskService.changeTaskPosition(taskId, Optional.of(leftTaskId)));
 
@@ -518,7 +542,7 @@ class TaskServiceTest {
         Long taskId = 1L;
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenThrow(
                 new NotFoundException("Task not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.changeTaskPosition(taskId, Optional.empty()));
@@ -556,8 +580,8 @@ class TaskServiceTest {
                 .build();
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
-        when(serviceHelper.getTaskStateOrThrowException(newTaskStateId)).thenReturn(newTaskState);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskStateByIdOrThrowException(newTaskStateId)).thenReturn(newTaskState);
         when(taskRepository.save(taskToMove)).thenReturn(taskToMove);
         when(taskDtoFactory.makeTaskDto(taskToMove)).thenReturn(expectedDto);
 
@@ -597,8 +621,8 @@ class TaskServiceTest {
                 .build();
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
-        when(serviceHelper.getTaskStateOrThrowException(newTaskStateId)).thenReturn(newTaskState);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskStateByIdOrThrowException(newTaskStateId)).thenReturn(newTaskState);
 
         assertThrows(BadRequestException.class, () -> taskService.changeTaskState(taskId, newTaskStateId));
     }
@@ -609,7 +633,7 @@ class TaskServiceTest {
         Long newTaskStateId = 2L;
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenThrow(
                 new NotFoundException("Task not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.changeTaskState(taskId, newTaskStateId));
@@ -626,8 +650,8 @@ class TaskServiceTest {
                 .build();
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
-        when(serviceHelper.getTaskStateOrThrowException(newTaskStateId)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskStateByIdOrThrowException(newTaskStateId)).thenThrow(
                 new NotFoundException("Task state not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.changeTaskState(taskId, newTaskStateId));
@@ -663,8 +687,8 @@ class TaskServiceTest {
                 .build();
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(taskToMove);
-        when(serviceHelper.getTaskStateOrThrowException(newTaskStateId)).thenReturn(newTaskState);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(taskToMove);
+        when(serviceHelper.findTaskStateByIdOrThrowException(newTaskStateId)).thenReturn(newTaskState);
         when(taskRepository.save(taskToMove)).thenReturn(taskToMove);
         when(taskDtoFactory.makeTaskDto(taskToMove)).thenReturn(expectedDto);
 
@@ -721,8 +745,8 @@ class TaskServiceTest {
                 .build();
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(assignedUser);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(task);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(assignedUser);
         when(taskRepository.save(task)).thenReturn(task);
         when(taskDtoFactory.makeTaskDto(task)).thenReturn(expectedDto);
 
@@ -740,7 +764,7 @@ class TaskServiceTest {
         String username = "newUser";
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenThrow(
                 new NotFoundException("Task not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.assignTaskToUser(taskId, username));
@@ -762,8 +786,8 @@ class TaskServiceTest {
         task.setTaskState(taskState);
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
-        when(serviceHelper.getUserOrThrowException(username)).thenThrow(
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(task);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenThrow(
                 new NotFoundException("User not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskService.assignTaskToUser(taskId, username));
@@ -795,8 +819,8 @@ class TaskServiceTest {
         taskState.setProject(project);
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(task);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
 
         assertThrows(BadRequestException.class, () -> taskService.assignTaskToUser(taskId, username));
     }
@@ -828,11 +852,11 @@ class TaskServiceTest {
         taskState.setProject(project);
 
         initSecurityContext();
-        when(serviceHelper.getTaskOrThrowException(taskId)).thenReturn(task);
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findTaskByIdOrThrowException(taskId)).thenReturn(task);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
         when(taskDtoFactory.makeTaskDto(task)).thenReturn(new TaskDto());
 
-        TaskDto result = taskService.assignTaskToUser(taskId, username);
+        taskService.assignTaskToUser(taskId, username);
 
         assertEquals(username, task.getAssignedUser().getUsername());
         verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());

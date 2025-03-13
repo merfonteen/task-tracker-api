@@ -60,7 +60,7 @@ class TaskStateServiceTest {
 
         project.setTaskStates(List.of(taskState));
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
         when(taskStateDtoFactory.makeTaskStateDto(taskState)).thenReturn(taskStateDto);
 
         List<TaskStateDto> taskStates = taskStateService.getTaskStates(projectId);
@@ -79,7 +79,7 @@ class TaskStateServiceTest {
 
         project.setTaskStates(List.of());
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
 
         List<TaskStateDto> taskStates = taskStateService.getTaskStates(projectId);
 
@@ -90,7 +90,7 @@ class TaskStateServiceTest {
     void testGetTaskStates_WhenProjectNotFound_ShouldThrowException() {
         Long projectId = 1L;
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskStateService.getTaskStates(projectId));
@@ -115,7 +115,7 @@ class TaskStateServiceTest {
                 .name(taskStateName)
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
         when(taskStateDtoFactory.makeTaskStateDto(taskState)).thenReturn(expected);
         when(taskStateRepository.save(any(TaskStateEntity.class))).thenReturn(taskState);
 
@@ -138,7 +138,7 @@ class TaskStateServiceTest {
         Long projectId = 1L;
         String taskStateName = "taskStateName";
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> taskStateService.createTaskState(projectId, taskStateName));
@@ -161,7 +161,7 @@ class TaskStateServiceTest {
 
         project.getTaskStates().add(existingTaskState);
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
 
         assertThrows(BadRequestException.class, () -> taskStateService.createTaskState(projectId, taskStateName));
     }
@@ -189,7 +189,7 @@ class TaskStateServiceTest {
                 .name(newTaskStateName)
                 .build();
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskState);
         when(taskStateDtoFactory.makeTaskStateDto(taskState)).thenReturn(expected);
         when(taskStateRepository.findTaskStateEntityByProjectIdAndNameContainsIgnoreCase(
                 taskState.getProject().getId(), newTaskStateName)).thenReturn(Optional.empty()
@@ -215,7 +215,7 @@ class TaskStateServiceTest {
         Long taskStateId = 1L;
         String newTaskStateName = "newName";
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenThrow(
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenThrow(
                 new NotFoundException("Task state not found", HttpStatus.NOT_FOUND)
         );
 
@@ -245,7 +245,7 @@ class TaskStateServiceTest {
         project.getTaskStates().add(taskStateToUpdate);
         taskStateToUpdate.setProject(project);
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskStateToUpdate);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskStateToUpdate);
         when(taskStateRepository.findTaskStateEntityByProjectIdAndNameContainsIgnoreCase(
                 taskStateToUpdate.getProject().getId(), name)).thenReturn(Optional.of(existingTaskState)
         );
@@ -261,7 +261,7 @@ class TaskStateServiceTest {
                 .id(taskStateId)
                 .build();
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskState);
 
         AckDto result = taskStateService.deleteTaskState(taskStateId);
 
@@ -274,7 +274,7 @@ class TaskStateServiceTest {
     void testDeleteTaskState_WhenTaskStateNotFound_ShouldThrowException() {
         Long taskStateId = 1L;
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenThrow(
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenThrow(
                 new NotFoundException("Task state not found", HttpStatus.NOT_FOUND)
         );
 
@@ -303,8 +303,8 @@ class TaskStateServiceTest {
 
         TaskStateDto expectedDto = new TaskStateDto();
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(currentTaskState);
-        when(serviceHelper.getTaskStateOrThrowException(leftTaskStateId)).thenReturn(leftTaskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(currentTaskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(leftTaskStateId)).thenReturn(leftTaskState);
         when(taskStateDtoFactory.makeTaskStateDto(currentTaskState)).thenReturn(expectedDto);
         when(taskStateRepository.save(currentTaskState)).thenReturn(currentTaskState);
 
@@ -320,7 +320,7 @@ class TaskStateServiceTest {
         Long taskStateId = 1L;
         Long leftTaskStateId = 2L;
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenThrow(
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenThrow(
                 new NotFoundException("Task state not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class,
@@ -340,7 +340,7 @@ class TaskStateServiceTest {
                 .taskStates(List.of(taskState))
                 .build();
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(taskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(taskState);
 
         assertThrows(BadRequestException.class,
                 () -> taskStateService.changeTaskStatePosition(taskStateId, Optional.of(taskStateId)));
@@ -369,8 +369,8 @@ class TaskStateServiceTest {
                 .project((project2))
                 .build();
 
-        when(serviceHelper.getTaskStateOrThrowException(taskStateId)).thenReturn(currentTaskState);
-        when(serviceHelper.getTaskStateOrThrowException(leftTaskStateId)).thenReturn(leftTaskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(taskStateId)).thenReturn(currentTaskState);
+        when(serviceHelper.findTaskStateByIdOrThrowException(leftTaskStateId)).thenReturn(leftTaskState);
 
         assertThrows(BadRequestException.class,
                 () -> taskStateService.changeTaskStatePosition(taskStateId, Optional.of(leftTaskStateId)));

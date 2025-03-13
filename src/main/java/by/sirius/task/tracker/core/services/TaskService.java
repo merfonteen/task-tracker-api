@@ -13,8 +13,6 @@ import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -36,6 +34,22 @@ public class TaskService {
 
     private final ServiceHelper serviceHelper;
 
+    public TaskDto getTaskById(Long projectId, Long taskStateId, Long taskId) {
+        serviceHelper.findProjectByIdOrThrowException(projectId);
+        TaskEntity task = serviceHelper.findTaskByIdOrThrowException(taskId);
+
+        TaskStateEntity taskStateWithTask = taskStateRepository.findByProjectIdAndId(projectId, taskStateId)
+                .orElseThrow(() -> new NotFoundException("Task state not found", HttpStatus.NOT_FOUND));
+
+        if (!taskStateWithTask.getTasks().contains(task)) {
+            throw new BadRequestException("Task state with id '%d' doesn't contain task with id '%d'"
+                    .formatted(taskStateId, taskId),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        return taskDtoFactory.makeTaskDto(task);
+    }
+
     public List<TaskDto> getTasks(Long projectId, Long taskStateId) {
         log.debug("Fetching tasks for project ID: {} and task state ID: {}", projectId, taskStateId);
 
@@ -53,8 +67,8 @@ public class TaskService {
     public List<TaskDto> getAssignedTasks(String username) {
         log.debug("Getting assigned for project user: {}", username);
 
-        UserEntity user = serviceHelper.getUserOrThrowException(username);
-        List<TaskEntity> assignedTasks = taskRepository.findByAssignedUser(user);
+        UserEntity user = serviceHelper.findUserByUsernameOrThrowException(username);
+        List<TaskEntity> assignedTasks = taskRepository.findByAssignedUserId(user.getId());
 
         return assignedTasks.stream()
                 .map(taskDtoFactory::makeTaskDto)
@@ -69,12 +83,12 @@ public class TaskService {
             throw new BadRequestException("Task name can't be empty", HttpStatus.BAD_REQUEST);
         }
 
-        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
-        TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
+        TaskStateEntity taskState = serviceHelper.findTaskStateByIdOrThrowException(taskStateId);
 
         Optional<TaskEntity> optionalAnotherTask = Optional.empty();
 
-        if(!project.getTaskStates().contains(taskState)) {
+        if (!project.getTaskStates().contains(taskState)) {
             throw new NotFoundException("Project doesn't contain a such task state", HttpStatus.NOT_FOUND);
         }
 
@@ -117,7 +131,10 @@ public class TaskService {
             throw new BadRequestException("Task name can't be empty", HttpStatus.BAD_REQUEST);
         }
 
-        TaskEntity taskToUpdate = serviceHelper.getTaskOrThrowException(taskId);
+        TaskEntity taskToUpdate = serviceHelper.findTaskByIdOrThrowException(taskId);
+
+        validateTaskAction(taskToUpdate, currentUsername, "You are not authorized to edit this task");
+
         Long taskStateId = taskToUpdate.getTaskState().getId();
 
         taskRepository
@@ -152,7 +169,10 @@ public class TaskService {
         log.warn("Deleting task with ID: {}", taskId);
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        TaskEntity taskToDelete = serviceHelper.getTaskOrThrowException(taskId);
+        TaskEntity taskToDelete = serviceHelper.findTaskByIdOrThrowException(taskId);
+
+        validateTaskAction(taskToDelete, currentUsername, "You are not authorized to remove this task");
+
         serviceHelper.replaceOldTaskPosition(taskToDelete);
 
         TaskStateEntity taskState = taskToDelete.getTaskState();
@@ -177,7 +197,7 @@ public class TaskService {
                 taskId, optionalLeftTaskId.orElse(null));
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        TaskEntity changeTask = serviceHelper.getTaskOrThrowException(taskId);
+        TaskEntity changeTask = serviceHelper.findTaskByIdOrThrowException(taskId);
         TaskStateEntity taskState = changeTask.getTaskState();
 
         Optional<Long> optionalOldLeftTaskId = changeTask
@@ -196,7 +216,7 @@ public class TaskService {
                                 "Left task id equals changed task", HttpStatus.BAD_REQUEST);
                     }
 
-                    TaskEntity leftTaskEntity = serviceHelper.getTaskOrThrowException(leftTaskId);
+                    TaskEntity leftTaskEntity = serviceHelper.findTaskByIdOrThrowException(leftTaskId);
 
                     if (!taskState.getId().equals(leftTaskEntity.getTaskState().getId())) {
                         throw new BadRequestException(
@@ -266,8 +286,8 @@ public class TaskService {
         log.info("Changing task state for task ID: {} to new task state ID: {}", taskId, newTaskStateId);
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        TaskEntity taskToMove = serviceHelper.getTaskOrThrowException(taskId);
-        TaskStateEntity newTaskState = serviceHelper.getTaskStateOrThrowException(newTaskStateId);
+        TaskEntity taskToMove = serviceHelper.findTaskByIdOrThrowException(taskId);
+        TaskStateEntity newTaskState = serviceHelper.findTaskStateByIdOrThrowException(newTaskStateId);
         TaskStateEntity currentTaskState = taskToMove.getTaskState();
 
         newTaskState.getTasks()
@@ -324,12 +344,12 @@ public class TaskService {
         log.info("Assigning task with ID: {} for user: {}", taskId, username);
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        TaskEntity task = serviceHelper.getTaskOrThrowException(taskId);
+        TaskEntity task = serviceHelper.findTaskByIdOrThrowException(taskId);
         TaskStateEntity taskState = task.getTaskState();
         ProjectEntity project = taskState.getProject();
-        UserEntity user = serviceHelper.getUserOrThrowException(username);
+        UserEntity user = serviceHelper.findUserByUsernameOrThrowException(username);
 
-        if(!project.getUsers().contains(user)) {
+        if (!project.getUsers().contains(user)) {
             throw new BadRequestException("Project doesn't contain user: " + username, HttpStatus.BAD_REQUEST);
         }
 
@@ -356,5 +376,12 @@ public class TaskService {
         taskHistoryRepository.save(taskHistory);
 
         return taskDtoFactory.makeTaskDto(task);
+    }
+
+    private static void validateTaskAction(TaskEntity taskToDelete, String currentUsername, String exMessage) {
+        if (!taskToDelete.getAssignedUser().getUsername().equals(currentUsername) ||
+                !taskToDelete.getTaskState().getProject().getAdmin().getUsername().equals(currentUsername)) {
+            throw new BadRequestException(exMessage, HttpStatus.BAD_REQUEST);
+        }
     }
 }

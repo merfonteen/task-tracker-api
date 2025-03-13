@@ -3,8 +3,6 @@ package by.sirius.task.tracker.store.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.Objects;
 
 @Getter
@@ -14,10 +12,7 @@ import java.util.Objects;
 @Builder
 @Entity
 @Table(name = "project_roles")
-public class ProjectRoleEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class ProjectRoleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

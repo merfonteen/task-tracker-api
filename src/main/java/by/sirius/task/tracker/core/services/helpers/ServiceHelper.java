@@ -23,7 +23,7 @@ public class ServiceHelper {
     private final InvitationRepository invitationRepository;
     private final TaskHistoryRepository taskHistoryRepository;
 
-    public ProjectEntity getProjectOrThrowException(Long projectId) {
+    public ProjectEntity findProjectByIdOrThrowException(Long projectId) {
         return projectRepository
                 .findById(projectId)
                 .orElseThrow(() -> {
@@ -33,7 +33,7 @@ public class ServiceHelper {
                 });
     }
 
-    public TaskStateEntity getTaskStateOrThrowException(Long taskStateId) {
+    public TaskStateEntity findTaskStateByIdOrThrowException(Long taskStateId) {
         return taskStateRepository
                 .findById(taskStateId)
                 .orElseThrow(() -> {
@@ -44,7 +44,7 @@ public class ServiceHelper {
                 });
     }
 
-    public TaskEntity getTaskOrThrowException(Long taskId) {
+    public TaskEntity findTaskByIdOrThrowException(Long taskId) {
         return taskRepository
                 .findById(taskId)
                 .orElseThrow(() -> {
@@ -55,7 +55,7 @@ public class ServiceHelper {
                 });
     }
 
-    public UserEntity getUserOrThrowException(String username) {
+    public UserEntity findUserByUsernameOrThrowException(String username) {
         return userRepository
                 .findByUsername(username)
                 .orElseThrow(() -> {
@@ -82,7 +82,7 @@ public class ServiceHelper {
                 });
     }
 
-    public InvitationEntity getInvitationOrThrowException(Long invitationId) {
+    public InvitationEntity findInvitationByIdOrThrowException(Long invitationId) {
         return invitationRepository
                 .findById(invitationId)
                 .orElseThrow(() -> {
@@ -91,7 +91,7 @@ public class ServiceHelper {
                 });
     }
 
-    public TaskHistoryEntity getTaskHistoryOrThrowException(Long taskHistoryId) {
+    public TaskHistoryEntity findTaskHistoryByIdOrThrowException(Long taskHistoryId) {
         return taskHistoryRepository
                 .findById(taskHistoryId)
                 .orElseThrow(() -> {

@@ -46,16 +46,19 @@ public class UserService {
     @Transactional
     public UserEntity createNewUser(RegisterRequestDto registerRequestDto) {
         log.info("Creating user for register...");
-        UserEntity user = new UserEntity();
-        user.setEmail(registerRequestDto.getEmail());
-        user.setUsername(registerRequestDto.getUsername());
-        user.setPassword(passwordEncoder.encode(registerRequestDto.getPassword()));
-        user.setRoles(List.of(roleService.getAdminRole()));
-        user.setEnabled(true);
+
+        UserEntity user = UserEntity.builder()
+                .email(registerRequestDto.getEmail())
+                .username(registerRequestDto.getUsername())
+                .password(passwordEncoder.encode(registerRequestDto.getPassword()))
+                .roles(List.of(roleService.getAdminRole()))
+                .enabled(true)
+                .build();
+
         return userRepository.save(user);
     }
 
     public UserEntity findByUsername(String username) {
-        return serviceHelper.getUserOrThrowException(username);
+        return serviceHelper.findUserByUsernameOrThrowException(username);
     }
 }

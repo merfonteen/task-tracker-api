@@ -3,6 +3,7 @@ package by.sirius.task.tracker.core.services;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.TaskStateDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
+import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.core.factories.TaskStateDtoFactory;
 import by.sirius.task.tracker.core.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
@@ -11,8 +12,6 @@ import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +29,17 @@ public class TaskStateService {
 
     private final ServiceHelper serviceHelper;
 
+    public TaskStateDto getTaskStateById(Long projectId, Long taskStateId) {
+        TaskStateEntity taskState = taskStateRepository.findByProjectIdAndId(projectId, taskStateId)
+                .orElseThrow(() -> new NotFoundException("Task state not found", HttpStatus.NOT_FOUND));
+
+        return taskStateDtoFactory.makeTaskStateDto(taskState);
+    }
+
     public List<TaskStateDto> getTaskStates(Long projectId) {
         log.debug("Fetching task states for project ID: {}", projectId);
 
-        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
 
         return project
                 .getTaskStates()
@@ -50,7 +56,7 @@ public class TaskStateService {
             throw new BadRequestException("Task state name can't be empty.", HttpStatus.BAD_REQUEST);
         }
 
-        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
         Optional<TaskStateEntity> optionalAnotherTaskState = Optional.empty();
 
         for (TaskStateEntity taskState : project.getTaskStates()) {
@@ -91,7 +97,7 @@ public class TaskStateService {
             throw new BadRequestException("Task state name can't be empty.", HttpStatus.BAD_REQUEST);
         }
 
-        TaskStateEntity taskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
+        TaskStateEntity taskState = serviceHelper.findTaskStateByIdOrThrowException(taskStateId);
 
         taskStateRepository
                 .findTaskStateEntityByProjectIdAndNameContainsIgnoreCase(
@@ -114,7 +120,7 @@ public class TaskStateService {
     public AckDto deleteTaskState(Long taskStateId) {
         log.warn("Deleting task state with ID: {}", taskStateId);
 
-        TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
+        TaskStateEntity changeTaskState = serviceHelper.findTaskStateByIdOrThrowException(taskStateId);
 
         serviceHelper.replaceOldTaskStatePosition(changeTaskState);
         taskStateRepository.deleteById(taskStateId);
@@ -127,7 +133,7 @@ public class TaskStateService {
         log.info("Changing task state position for task state ID: {}, left state ID: {}",
                 taskStateId, optionalLeftTaskStateId.orElse(null));
 
-        TaskStateEntity changeTaskState = serviceHelper.getTaskStateOrThrowException(taskStateId);
+        TaskStateEntity changeTaskState = serviceHelper.findTaskStateByIdOrThrowException(taskStateId);
         ProjectEntity project = changeTaskState.getProject();
 
         Optional<Long> optionalOldLeftTaskStateId = changeTaskState
@@ -146,7 +152,7 @@ public class TaskStateService {
                                 "Left task state id equals changed task state.", HttpStatus.BAD_REQUEST);
                     }
 
-                    TaskStateEntity leftTaskStateEntity = serviceHelper.getTaskStateOrThrowException(leftTaskStateId);
+                    TaskStateEntity leftTaskStateEntity = serviceHelper.findTaskStateByIdOrThrowException(leftTaskStateId);
 
                     if (!project.getId().equals(leftTaskStateEntity.getProject().getId())) {
                         throw new BadRequestException(

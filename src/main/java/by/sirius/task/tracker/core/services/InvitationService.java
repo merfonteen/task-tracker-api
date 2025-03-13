@@ -10,8 +10,6 @@ import by.sirius.task.tracker.store.repositories.InvitationRepository;
 import by.sirius.task.tracker.store.repositories.ProjectRoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -30,12 +28,11 @@ public class InvitationService {
 
     private final ServiceHelper serviceHelper;
 
-    @Cacheable(value = "invitations", key = "#username")
     public List<InvitationDto> getUserInvitations(String username) {
 
-       List<InvitationEntity> allInvitations = invitationRepository.findAllByInvitedUser_username(username);
+       List<InvitationEntity> userInvitations = invitationRepository.findAllByInvitedUser_username(username);
 
-        return allInvitations.stream()
+        return userInvitations.stream()
                 .map(invitation -> new InvitationDto(
                         invitation.getId(),
                         invitation.getInvitingAdmin().getUsername(),
@@ -45,13 +42,15 @@ public class InvitationService {
                 .collect(Collectors.toList());
     }
 
-    @CacheEvict(value = "invitations", key = "#invitedUsername")
     @Transactional
-    public InvitationDto sendInvitation(String invitingAdminUsername, String invitedUsername, Long projectId) {
+    public InvitationDto sendInvitation(String invitingAdminName, String invitedUsername, Long projectId) {
+        UserEntity admin = serviceHelper.findUserByUsernameOrThrowException(invitingAdminName);
+        UserEntity user = serviceHelper.findUserByUsernameOrThrowException(invitedUsername);
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
 
-        UserEntity admin = serviceHelper.getUserOrThrowException(invitingAdminUsername);
-        UserEntity user = serviceHelper.getUserOrThrowException(invitedUsername);
-        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
+        if(!project.getAdmin().getUsername().equals(invitingAdminName)) {
+            throw new BadRequestException("Only project admin can send invitations", HttpStatus.BAD_REQUEST);
+        }
 
         Optional<InvitationEntity> existingInvitation = invitationRepository
                 .findByInvitedUserAndProjectAndStatus(user, project, InvitationStatus.SENT);
@@ -78,11 +77,10 @@ public class InvitationService {
         return invitationDtoFactory.makeInvitationDto(invitationToSave);
     }
 
-    @CacheEvict(value = "invitations", key = "#username")
     @Transactional
     public AckDto acceptInvitation(Long invitationId, String username) {
 
-        InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
+        InvitationEntity invitation = serviceHelper.findInvitationByIdOrThrowException(invitationId);
 
         if(!invitation.getInvitedUser().getUsername().equals(username)) {
             throw new BadRequestException("You cannot accept an invitation that is not yours", HttpStatus.BAD_REQUEST);
@@ -119,14 +117,13 @@ public class InvitationService {
     @Transactional
     public AckDto declineInvitation(Long invitationId, String username) {
 
-        InvitationEntity invitation = serviceHelper.getInvitationOrThrowException(invitationId);
+        InvitationEntity invitation = serviceHelper.findInvitationByIdOrThrowException(invitationId);
 
         if(!invitation.getInvitingAdmin().getUsername().equals(username)) {
             throw new BadRequestException("You cannot decline an invitation that is not yours", HttpStatus.BAD_REQUEST);
         }
 
         invitation.setStatus(InvitationStatus.DECLINED);
-
         invitationRepository.save(invitation);
 
         return AckDto.builder().answer(true).build();

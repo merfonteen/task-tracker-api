@@ -18,11 +18,19 @@ public class TaskStateController {
 
     private final TaskStateService taskStateService;
 
+    public static final String GET_TASK_STATE_BY_ID = "/api/projects/{project_id}/task-states/{task_state_id}";
     public static final String GET_TASK_STATES = "/api/projects/{project_id}/task-states";
     public static final String CREATE_TASK_STATE = "/api/projects/{project_id}/task-states";
     public static final String EDIT_TASK_STATE = "/api/task-states/{task_state_id}";
     public static final String DELETE_TASK_STATE = "/api/task-states/{task_state_id}";
     public static final String CHANGE_TASK_STATE_POSITION = "/api/task-states/{task_state_id}/position/change";
+
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
+    @GetMapping(GET_TASK_STATE_BY_ID)
+    public TaskStateDto getTaskStateById(@PathVariable(name = "project_id") Long projectId,
+                                         @PathVariable(name = "task_state_id") Long taskStateId) {
+        return taskStateService.getTaskStateById(projectId, taskStateId);
+    }
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
     @GetMapping(GET_TASK_STATES)

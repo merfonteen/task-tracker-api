@@ -1,12 +1,11 @@
 package by.sirius.task.tracker.core.services;
 
+import by.sirius.task.tracker.api.dto.AuthResponseDto;
 import by.sirius.task.tracker.api.dto.LoginRequestDto;
 import by.sirius.task.tracker.api.dto.RegisterRequestDto;
-import by.sirius.task.tracker.api.dto.AuthResponseDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.core.security.CustomUserDetailsService;
 import by.sirius.task.tracker.core.security.JwtTokenUtil;
-import by.sirius.task.tracker.store.entities.UserEntity;
 import by.sirius.task.tracker.store.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,7 +35,7 @@ public class AuthService {
             throw new BadRequestException("Email is already in use!", HttpStatus.BAD_REQUEST);
         }
 
-        UserEntity user = userService.createNewUser(registerRequestDto);
+        userService.createNewUser(registerRequestDto);
 
         return ResponseEntity.ok("User registered successfully!");
     }

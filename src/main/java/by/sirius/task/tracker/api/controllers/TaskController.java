@@ -26,6 +26,7 @@ public class TaskController {
     private final TaskHistoryService taskHistoryService;
     private final ProjectSecurityService projectSecurityService;
 
+    public static final String GET_TASK_BY_ID = "/api/projects/{project_id}/task-states/{task_state_id}/tasks/{task_id}";
     public static final String GET_TASKS = "/api/projects/{project_id}/task-states/{task_state_id}/tasks";
     public static final String GET_USER_TASKS = "/api/projects/{project_id}/users/{username}/tasks";
     public static final String GET_TASK_HISTORY = "/api/tasks/{task_id}/history";
@@ -35,6 +36,14 @@ public class TaskController {
     public static final String ASSIGN_TASK_TO_SPECIFIC_USER = "/api/tasks/{task_id}/assign";
     public static final String CHANGE_TASK_STATE = "/api/tasks/{task_id}/state/change";
     public static final String CHANGE_TASK_POSITION = "/api/tasks/{task_id}/position/change";
+
+    @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
+    @GetMapping(GET_TASK_BY_ID)
+    public TaskDto getTaskById(@PathVariable("project_id") Long projectId,
+                               @PathVariable("task_state_id") Long taskStateId,
+                               @PathVariable(name = "task_id") Long taskId) {
+        return taskService.getTaskById(projectId, taskStateId, taskId);
+    }
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
     @GetMapping(GET_TASKS)

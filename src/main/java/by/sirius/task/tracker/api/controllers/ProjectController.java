@@ -3,15 +3,10 @@ package by.sirius.task.tracker.api.controllers;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.InvitationDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;
-import by.sirius.task.tracker.api.exceptions.BadRequestException;
-import by.sirius.task.tracker.store.entities.ProjectEntity;
-import by.sirius.task.tracker.store.entities.UserEntity;
 import by.sirius.task.tracker.core.services.InvitationService;
 import by.sirius.task.tracker.core.services.ProjectService;
-import by.sirius.task.tracker.core.services.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,16 +18,21 @@ import java.util.List;
 @Slf4j
 public class ProjectController {
 
-    private final UserService userService;
     private final ProjectService projectService;
     private final InvitationService invitationService;
 
+    public static final String GET_PROJECT_BY_ID = "/api/projects/{project_id}";
     public static final String GET_PROJECTS = "/api/projects";
     public static final String CREATE_PROJECT = "/api/projects";
     public static final String EDIT_PROJECT = "/api/projects/{project_id}";
     public static final String DELETE_PROJECT = "/api/projects/{project_id}";
     public static final String REMOVE_USER_FROM_PROJECT = "/api/projects/{project_id}/users/{username}";
     public static final String SEND_INVITATION_TO_PROJECT = "/api/projects/{project_id}/invitations/send";
+
+    @GetMapping(GET_PROJECT_BY_ID)
+    public ProjectDto getProjectById(@PathVariable(name = "project_id") Long projectId, Principal principal) {
+        return projectService.getProjectById(projectId, principal.getName());
+    }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping(GET_PROJECTS)
@@ -54,22 +54,23 @@ public class ProjectController {
                                   @RequestParam String name,
                                   Principal principal) {
         log.info("Editing project with ID: {}, new name: {}", projectId, name);
-        return projectService.editProject(projectId, name);
+        return projectService.editProject(projectId, name, principal.getName());
     }
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @DeleteMapping(DELETE_PROJECT)
-    public AckDto deleteProject(@PathVariable("project_id") Long projectId) {
+    public AckDto deleteProject(@PathVariable("project_id") Long projectId, Principal principal) {
         log.warn("Deleting project with ID: {}", projectId);
-        return projectService.deleteProject(projectId);
+        return projectService.deleteProject(projectId, principal.getName());
     }
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @DeleteMapping(REMOVE_USER_FROM_PROJECT)
     public AckDto removeUserFromProject(@PathVariable("project_id") Long projectId,
-                                        @PathVariable String username) {
+                                        @PathVariable String username,
+                                        Principal principal) {
         log.warn("Removing user {} from project with ID: {}", username, projectId);
-        return projectService.removeUserFromProject(projectId, username);
+        return projectService.removeUserFromProject(projectId, username, principal.getName());
     }
 
     @PostMapping(SEND_INVITATION_TO_PROJECT)
@@ -77,14 +78,6 @@ public class ProjectController {
                                         @RequestParam String username,
                                         Principal principal) {
         log.info("User {} is inviting {} to project with ID: {}", principal.getName(), username, projectId);
-
-        UserEntity invitingAdmin = userService.findByUsername(principal.getName());
-        ProjectEntity project = projectService.getProjectById(projectId);
-
-        if (!projectService.isAdmin(invitingAdmin, project)) {
-            throw new BadRequestException("Only project admin can send invitations.", HttpStatus.BAD_REQUEST);
-        }
-
-        return invitationService.sendInvitation(invitingAdmin.getUsername(), username, projectId);
+        return invitationService.sendInvitation(principal.getName(), username, projectId);
     }
 }

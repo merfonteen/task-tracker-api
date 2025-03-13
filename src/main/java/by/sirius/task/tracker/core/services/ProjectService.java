@@ -16,8 +16,6 @@ import by.sirius.task.tracker.store.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -36,10 +34,20 @@ public class ProjectService {
 
     private final ServiceHelper serviceHelper;
 
+    public ProjectDto getProjectById(Long projectId, String username) {
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
+
+        if (!project.getAdmin().getUsername().equals(username)) {
+            throw new BadRequestException("You are not authorized to view this project", HttpStatus.BAD_REQUEST);
+        }
+
+        return projectDtoFactory.makeProjectDto(project);
+    }
+
     public List<ProjectDto> getProjects(String currentUsername) {
         log.debug("Getting all projects");
 
-        UserEntity currentUser = serviceHelper.getUserOrThrowException(currentUsername);
+        UserEntity currentUser = serviceHelper.findUserByUsernameOrThrowException(currentUsername);
         List<ProjectEntity> userProjects = findUserProjects(currentUser);
 
         return userProjects.stream()
@@ -53,6 +61,9 @@ public class ProjectService {
     public ProjectDto createProject(String name, String currentUsername) {
         log.info("Creating project with name: {}", name);
 
+        UserEntity admin = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> (new NotFoundException("User not found", HttpStatus.BAD_REQUEST)));
+
         if (name.trim().isEmpty()) {
             throw new BadRequestException("Name can't be empty", HttpStatus.BAD_REQUEST);
         }
@@ -63,9 +74,6 @@ public class ProjectService {
                     throw new BadRequestException(
                             String.format("Project \"%s\" already exists", name), HttpStatus.BAD_REQUEST);
                 });
-
-        UserEntity admin = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> (new NotFoundException("User not found", HttpStatus.BAD_REQUEST)));
 
         ProjectEntity project = projectRepository.save(
                 ProjectEntity.builder()
@@ -80,14 +88,19 @@ public class ProjectService {
     }
 
     @Transactional
-    public ProjectDto editProject(Long projectId, String newProjectName) {
+    public ProjectDto editProject(Long projectId, String newProjectName, String username) {
         log.info("Editing project with ID: {} to new name: {}", projectId, newProjectName);
+
+        UserEntity user = serviceHelper.findUserByUsernameOrThrowException(username);
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
 
         if (newProjectName.trim().isEmpty()) {
             throw new BadRequestException("Name can't be empty", HttpStatus.BAD_REQUEST);
         }
 
-        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
+        if (!project.getAdmin().getUsername().equals(user.getUsername())) {
+            throw new BadRequestException("You are not authorized to edit this project", HttpStatus.BAD_REQUEST);
+        }
 
         projectRepository
                 .findByName(newProjectName)
@@ -105,19 +118,30 @@ public class ProjectService {
     }
 
     @Transactional
-    public AckDto deleteProject(Long projectId) {
+    public AckDto deleteProject(Long projectId, String adminName) {
         log.warn("Deleting project with ID: {}", projectId);
-        serviceHelper.getProjectOrThrowException(projectId);
-        projectRepository.deleteById(projectId);
+
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
+
+        if (!project.getAdmin().getUsername().equals(adminName)) {
+            throw new BadRequestException("You are not authorized to remove this project", HttpStatus.BAD_REQUEST);
+        }
+
+        projectRepository.delete(project);
+
         return AckDto.makeDefault(true);
     }
 
     @Transactional
-    public AckDto removeUserFromProject(Long projectId, String username) {
-        log.warn("Removing user {} from project with ID: {}", username, projectId);
+    public AckDto removeUserFromProject(Long projectId, String usernameToRemove, String adminName) {
+        log.warn("Removing user {} from project with ID: {}", usernameToRemove, projectId);
 
-        ProjectEntity project = serviceHelper.getProjectOrThrowException(projectId);
-        UserEntity userToDelete = serviceHelper.getUserOrThrowException(username);
+        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
+        UserEntity userToDelete = serviceHelper.findUserByUsernameOrThrowException(usernameToRemove);
+
+        if (!project.getAdmin().getUsername().equals(adminName)) {
+            throw new BadRequestException("You are not authorized to remove the user from the project", HttpStatus.BAD_REQUEST);
+        }
 
         project.getUsers().remove(userToDelete);
         userToDelete.getMemberProjects().remove(project);
@@ -133,11 +157,6 @@ public class ProjectService {
         }
 
         return AckDto.builder().answer(true).build();
-    }
-
-    public ProjectEntity getProjectById(Long projectId) {
-        log.debug("Getting project by id: {}", projectId);
-        return serviceHelper.getProjectOrThrowException(projectId);
     }
 
     private void assignProjectAdminRole(UserEntity admin, ProjectEntity project) {
@@ -157,9 +176,5 @@ public class ProjectService {
         allProjects.addAll(projectRepository.findAllByAdmin(user));
         allProjects.addAll(projectRepository.findAllByUsersContaining(user));
         return allProjects;
-    }
-
-    public boolean isAdmin(UserEntity user, ProjectEntity project) {
-        return project.getAdmin().equals(user);
     }
 }

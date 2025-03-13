@@ -5,7 +5,6 @@ import by.sirius.task.tracker.api.dto.ProjectDto;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.core.factories.ProjectDtoFactory;
-import by.sirius.task.tracker.core.services.ProjectService;
 import by.sirius.task.tracker.core.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
 import by.sirius.task.tracker.store.entities.ProjectRoleEntity;
@@ -75,7 +74,7 @@ class ProjectServiceTest {
         projectDto2.setName("Project2");
         projectDto2.setCreatedAt(Instant.now());
 
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
         when(projectRepository.findAllByAdmin(user)).thenReturn(List.of(project1));
         when(projectRepository.findAllByUsersContaining(user)).thenReturn(List.of(project2));
         when(projectDtoFactory.makeProjectDto(project1)).thenReturn(projectDto1);
@@ -94,7 +93,7 @@ class ProjectServiceTest {
         UserEntity user = new UserEntity();
         user.setUsername(username);
 
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
         when(projectRepository.findAllByAdmin(user)).thenReturn(List.of());
         when(projectRepository.findAllByUsersContaining(user)).thenReturn(List.of());
 
@@ -107,7 +106,7 @@ class ProjectServiceTest {
     void testGetProjects_WhenUserNotFound_ShouldThrowException() {
         String username = "nonExistentUsername";
 
-        when(serviceHelper.getUserOrThrowException(username)).thenThrow(
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenThrow(
                 new NotFoundException("User not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class, () -> projectService.getProjects(username));
@@ -158,6 +157,7 @@ class ProjectServiceTest {
     @Test
     void testCreateProject_WhenNameIsEmpty_ShouldThrowException() {
         String username = "testUser";
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(new UserEntity()));
         assertThrows(BadRequestException.class, () -> projectService.createProject("  ", username));
     }
 
@@ -172,6 +172,7 @@ class ProjectServiceTest {
         ProjectEntity existingProject = new ProjectEntity();
         existingProject.setName(projectName);
 
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(new UserEntity()));
         when(projectRepository.findByName(projectName)).thenReturn(Optional.of(existingProject));
 
         assertThrows(BadRequestException.class, () -> projectService.createProject(projectName, username));
@@ -191,10 +192,16 @@ class ProjectServiceTest {
     void testEditProject_Success() {
         Long projectId = 1L;
         String newProjectName = "updatedName";
+        String username = "testUser";
+
+        UserEntity user = UserEntity.builder()
+                .username(username)
+                .build();
 
         ProjectEntity project = ProjectEntity.builder()
                 .id(projectId)
                 .name("originalName")
+                .admin(user)
                 .build();
 
         ProjectDto projectDto = ProjectDto.builder()
@@ -203,12 +210,13 @@ class ProjectServiceTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
         when(projectRepository.findByName(newProjectName)).thenReturn(Optional.empty());
         when(projectRepository.save(project)).thenReturn(project);
         when(projectDtoFactory.makeProjectDto(project)).thenReturn(projectDto);
 
-        ProjectDto updatedProjectDto = projectService.editProject(projectId, newProjectName);
+        ProjectDto updatedProjectDto = projectService.editProject(projectId, newProjectName, username);
 
         assertEquals(newProjectName, updatedProjectDto.getName());
         verify(projectRepository).save(project);
@@ -217,8 +225,13 @@ class ProjectServiceTest {
     @Test
     void testEdiProject_WhenNewProjectNameIsEmpty_ShouldThrowException() {
         Long projectId = 1L;
-        String newProjectName = "   ";
-        assertThrows(BadRequestException.class, () -> projectService.editProject(projectId, newProjectName));
+        String newProjectName = " ";
+        String username = "testUser";
+
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(new UserEntity());
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(new ProjectEntity());
+
+        assertThrows(BadRequestException.class, () -> projectService.editProject(projectId, newProjectName, username));
         verify(projectRepository, never()).save(any());
     }
 
@@ -226,10 +239,16 @@ class ProjectServiceTest {
     void testEditProject_WhenNewProjectNameAlreadyExist_ShouldThrowException() {
         Long projectId = 1L;
         String newProjectName = "NewProjectName";
+        String username = "testUser";
+
+        UserEntity user = UserEntity.builder()
+                .username(username)
+                .build();
 
         ProjectEntity project = ProjectEntity.builder()
                 .id(projectId)
                 .name("originalName")
+                .admin(user)
                 .build();
 
         ProjectEntity existingProject = ProjectEntity.builder()
@@ -237,10 +256,11 @@ class ProjectServiceTest {
                 .name(newProjectName)
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
         when(projectRepository.findByName(newProjectName)).thenReturn(Optional.of(existingProject));
 
-        assertThrows(BadRequestException.class, () -> projectService.editProject(projectId, newProjectName));
+        assertThrows(BadRequestException.class, () -> projectService.editProject(projectId, newProjectName, username));
         verify(projectRepository, never()).save(any());
     }
 
@@ -248,62 +268,68 @@ class ProjectServiceTest {
     void testEditProject_WhenProjectNotFound_ShouldThrowException() {
         Long projectId = 1L;
         String newProjectName = "newProjectName";
+        String username = "testUser";
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(new UserEntity());
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException(
                         String.format("Project with \"%d\" id doesn't exist", projectId), HttpStatus.NOT_FOUND)
         );
 
-        assertThrows(NotFoundException.class, () -> projectService.editProject(projectId, newProjectName));
+        assertThrows(NotFoundException.class, () -> projectService.editProject(projectId, newProjectName, username));
         verify(projectRepository, never()).save(any());
     }
 
     @Test
     void testDeleteProject_Success() {
         Long projectId = 1L;
+        String username = "testUser";
 
         ProjectEntity project = ProjectEntity.builder()
                 .id(projectId)
+                .admin(UserEntity.builder().username(username).build())
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
 
-        AckDto result = projectService.deleteProject(projectId);
+        AckDto result = projectService.deleteProject(projectId, username);
 
         assertNotNull(result);
         assertTrue(result.getAnswer());
-        verify(projectRepository).deleteById(projectId);
+        verify(projectRepository).delete(project);
     }
 
     @Test
     void testDeleteProject_WhenProjectNotFound_ShouldThrowException() {
         Long projectId = 1L;
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException(
                         String.format("Project with \"%d\" id doesn't exist", projectId), HttpStatus.NOT_FOUND)
         );
 
-        assertThrows(NotFoundException.class, () -> projectService.deleteProject(projectId));
+        assertThrows(NotFoundException.class, () -> projectService.deleteProject(projectId, "testUser"));
         verify(projectRepository, never()).deleteById(projectId);
     }
 
     @Test
     void testRemoveUserFromProject_Success() {
         Long projectId = 1L;
-        String username = "testUser";
+        String usernameToRemove = "testUser";
 
-        ProjectEntity project = new ProjectEntity();
-        project.setId(projectId);
+        UserEntity user = UserEntity.builder()
+                .username(usernameToRemove)
+                .build();
 
-        UserEntity user = new UserEntity();
-        user.setUsername(username);
-        user.setMemberProjects(new ArrayList<>(List.of(project)));
+        ProjectEntity project = ProjectEntity.builder()
+                .id(projectId)
+                .admin(user)
+                .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(usernameToRemove)).thenReturn(user);
 
-        AckDto result = projectService.removeUserFromProject(projectId, username);
+        AckDto result = projectService.removeUserFromProject(projectId, usernameToRemove, "testUser");
 
         assertTrue(result.getAnswer());
         assertFalse(project.getUsers().contains(user));
@@ -318,10 +344,10 @@ class ProjectServiceTest {
         Long projectId = 1L;
         String username = "testUsername";
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
-        assertThrows(NotFoundException.class, () -> projectService.removeUserFromProject(projectId, username));
+        assertThrows(NotFoundException.class, () -> projectService.removeUserFromProject(projectId, username, "testUsername"));
     }
 
     @Test
@@ -332,11 +358,11 @@ class ProjectServiceTest {
         ProjectEntity project = new ProjectEntity();
         project.setId(projectId);
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getUserOrThrowException(username)).thenThrow(
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenThrow(
                 new NotFoundException("User not found", HttpStatus.NOT_FOUND));
 
-        assertThrows(NotFoundException.class, () -> projectService.removeUserFromProject(projectId, username));
+        assertThrows(NotFoundException.class, () -> projectService.removeUserFromProject(projectId, username, "testUsername"));
     }
 
     @Test
@@ -344,21 +370,23 @@ class ProjectServiceTest {
         Long projectId = 1L;
         String username = "testUser";
 
-        ProjectEntity project = new ProjectEntity();
-        project.setId(projectId);
+        UserEntity user = UserEntity.builder()
+                .username(username)
+                .build();
 
-        UserEntity user = new UserEntity();
-        user.setUsername(username);
-        user.setMemberProjects(new ArrayList<>(List.of(project)));
+        ProjectEntity project = ProjectEntity.builder()
+                .id(projectId)
+                .admin(user)
+                .build();
 
         RoleEntity userRole = new RoleEntity();
         userRole.setName("ROLE_USER");
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getUserOrThrowException(username)).thenReturn(user);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(username)).thenReturn(user);
         when(serviceHelper.getUserRoleOrThrowException()).thenReturn(userRole);
 
-        projectService.removeUserFromProject(projectId, username);
+        projectService.removeUserFromProject(projectId, username, "testUser");
 
         assertFalse(user.getRoles().contains(userRole));
         verify(userRepository).save(user);

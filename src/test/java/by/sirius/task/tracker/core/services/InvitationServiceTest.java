@@ -118,9 +118,9 @@ class InvitationServiceTest {
                 .invitedUser(invitedUser.getUsername())
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getUserOrThrowException(invitedUsername)).thenReturn(invitedUser);
-        when(serviceHelper.getUserOrThrowException(invitingAdminUsername)).thenReturn(invitingUser);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(invitedUsername)).thenReturn(invitedUser);
+        when(serviceHelper.findUserByUsernameOrThrowException(invitingAdminUsername)).thenReturn(invitingUser);
         when(invitationRepository.findByInvitedUserAndProjectAndStatus(invitedUser, project, InvitationStatus.SENT))
                 .thenReturn(Optional.empty());
         when(invitationRepository.save(any(InvitationEntity.class))).thenReturn(invitation);
@@ -157,9 +157,9 @@ class InvitationServiceTest {
                 .username(invitingAdminUsername)
                 .build();
 
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenReturn(project);
-        when(serviceHelper.getUserOrThrowException(invitedUsername)).thenReturn(invitedUser);
-        when(serviceHelper.getUserOrThrowException(invitingAdminUsername)).thenReturn(invitingUser);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);
+        when(serviceHelper.findUserByUsernameOrThrowException(invitedUsername)).thenReturn(invitedUser);
+        when(serviceHelper.findUserByUsernameOrThrowException(invitingAdminUsername)).thenReturn(invitingUser);
         when(invitationRepository.findByInvitedUserAndProjectAndStatus(invitedUser, project, InvitationStatus.SENT))
                 .thenReturn(Optional.of(new InvitationEntity()));
 
@@ -181,8 +181,8 @@ class InvitationServiceTest {
                 .username(invitingAdminUsername)
                 .build();
 
-        when(serviceHelper.getUserOrThrowException(invitingAdminUsername)).thenReturn(invitingAdmin);
-        when(serviceHelper.getUserOrThrowException(invitedUsername)).thenThrow(
+        when(serviceHelper.findUserByUsernameOrThrowException(invitingAdminUsername)).thenReturn(invitingAdmin);
+        when(serviceHelper.findUserByUsernameOrThrowException(invitedUsername)).thenThrow(
                 new NotFoundException("User not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class,
@@ -208,9 +208,9 @@ class InvitationServiceTest {
                 .username(invitedUsername)
                 .build();
 
-        when(serviceHelper.getUserOrThrowException(invitingAdminUsername)).thenReturn(invitingAdmin);
-        when(serviceHelper.getUserOrThrowException(invitedUsername)).thenReturn(invitedUser);
-        when(serviceHelper.getProjectOrThrowException(projectId)).thenThrow(
+        when(serviceHelper.findUserByUsernameOrThrowException(invitingAdminUsername)).thenReturn(invitingAdmin);
+        when(serviceHelper.findUserByUsernameOrThrowException(invitedUsername)).thenReturn(invitedUser);
+        when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenThrow(
                 new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class,
@@ -255,7 +255,7 @@ class InvitationServiceTest {
                 .role(role)
                 .build();
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId)).thenReturn(invitation);
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId)).thenReturn(invitation);
         when(serviceHelper.getUserRoleOrThrowException()).thenReturn(role);
         when(projectRoleRepository.save(any(ProjectRoleEntity.class))).thenReturn(projectRole);
         when(invitationRepository.save(any(InvitationEntity.class))).thenReturn(invitation);
@@ -285,7 +285,7 @@ class InvitationServiceTest {
                 .status(InvitationStatus.SENT)
                 .build();
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId)).thenReturn(invitation);
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId)).thenReturn(invitation);
 
         assertThrows(BadRequestException.class,
                 () -> invitationService.acceptInvitation(invitationId, username));
@@ -309,7 +309,7 @@ class InvitationServiceTest {
                 .status(InvitationStatus.DECLINED)
                 .build();
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId)).thenReturn(invitation);
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId)).thenReturn(invitation);
 
         assertThrows(BadRequestException.class,
                 () -> invitationService.acceptInvitation(invitationId, username));
@@ -323,7 +323,7 @@ class InvitationServiceTest {
         Long invitationId = 1L;
         String username = "testUser";
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId))
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId))
                 .thenThrow(new NotFoundException("Invitation not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class,
@@ -344,7 +344,7 @@ class InvitationServiceTest {
                 .status(InvitationStatus.SENT)
                 .build();
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId)).thenReturn(invitation);
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId)).thenReturn(invitation);
 
         AckDto result = invitationService.declineInvitation(invitationId, username);
 
@@ -366,7 +366,7 @@ class InvitationServiceTest {
                 .status(InvitationStatus.SENT)
                 .build();
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId)).thenReturn(invitation);
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId)).thenReturn(invitation);
 
         assertThrows(BadRequestException.class,
                 () -> invitationService.declineInvitation(invitationId, username));
@@ -379,7 +379,7 @@ class InvitationServiceTest {
         Long invitationId = 1L;
         String username = "testUser";
 
-        when(serviceHelper.getInvitationOrThrowException(invitationId)).thenThrow(
+        when(serviceHelper.findInvitationByIdOrThrowException(invitationId)).thenThrow(
                 new NotFoundException("Invitation not found", HttpStatus.NOT_FOUND));
 
         assertThrows(NotFoundException.class,

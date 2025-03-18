@@ -2,6 +2,7 @@ package by.sirius.task.tracker.core.services;
 
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;
+import by.sirius.task.tracker.api.dto.ProjectDtoWithTaskStates;
 import by.sirius.task.tracker.api.exceptions.BadRequestException;
 import by.sirius.task.tracker.api.exceptions.NotFoundException;
 import by.sirius.task.tracker.core.factories.ProjectDtoFactory;
@@ -34,14 +35,15 @@ public class ProjectService {
 
     private final ServiceHelper serviceHelper;
 
-    public ProjectDto getProjectById(Long projectId, String username) {
-        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
+    public ProjectDtoWithTaskStates getProjectById(Long projectId, String username) {
+        ProjectEntity project = projectRepository.findWithTaskStatesByProjectIdAndAdminName(projectId, username)
+                .orElseThrow(() -> new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
         if (!project.getAdmin().getUsername().equals(username)) {
             throw new BadRequestException("You are not authorized to view this project", HttpStatus.BAD_REQUEST);
         }
 
-        return projectDtoFactory.makeProjectDto(project);
+        return projectDtoFactory.makeProjectDtoWithTaskStates(project);
     }
 
     public List<ProjectDto> getProjects(String currentUsername) {

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,16 +35,14 @@ public class TaskStateController {
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'READ')")
     @GetMapping(GET_TASK_STATES)
-    public List<TaskStateDto> getTaskStates(@PathVariable(name = "project_id") Long projectId) {
+    public List<TaskStateDto> getTaskStates(@PathVariable(name = "project_id") Long projectId, Principal principal) {
         log.debug("Fetching task states for project ID: {}", projectId);
-        return taskStateService.getTaskStates(projectId);
+        return taskStateService.getTaskStates(projectId, principal.getName());
     }
 
     @PreAuthorize("@projectSecurityService.hasProjectPermission(#projectId, 'WRITE')")
     @PostMapping(CREATE_TASK_STATE)
-    public TaskStateDto createTaskState(
-            @PathVariable(name = "project_id") Long projectId,
-            @RequestParam String taskStateName) {
+    public TaskStateDto createTaskState(@PathVariable(name = "project_id") Long projectId, @RequestParam String taskStateName) {
         log.info("Creating task state '{}' in project with ID: {}", taskStateName, projectId);
         return taskStateService.createTaskState(projectId, taskStateName);
     }

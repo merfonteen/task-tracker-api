@@ -7,16 +7,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProjectDto {
+public class ProjectDtoWithTaskStates {
     private Long id;
     private String name;
     private String owner;
 
     @JsonProperty("created_at")
     private Instant createdAt;
+    private List<TaskStateDto> taskStates;
 }

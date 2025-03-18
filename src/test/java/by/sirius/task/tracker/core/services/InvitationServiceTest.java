@@ -89,11 +89,6 @@ class InvitationServiceTest {
         String invitedUsername = "Invited User";
         String invitingAdminUsername = "Inviting User";
 
-        ProjectEntity project = ProjectEntity.builder()
-                .id(projectId)
-                .name("Test Project")
-                .build();
-
         UserEntity invitedUser = UserEntity.builder()
                 .id(1L)
                 .username(invitedUsername)
@@ -104,6 +99,12 @@ class InvitationServiceTest {
                 .id(2L)
                 .username(invitingAdminUsername)
                 .email("admin@gmail.com")
+                .build();
+
+        ProjectEntity project = ProjectEntity.builder()
+                .id(projectId)
+                .name("Test Project")
+                .admin(invitingUser)
                 .build();
 
         InvitationEntity invitation = InvitationEntity.builder()
@@ -143,10 +144,6 @@ class InvitationServiceTest {
         String invitedUsername = "Invited User";
         String invitingAdminUsername = "Inviting User";
 
-        ProjectEntity project = ProjectEntity.builder()
-                .id(projectId)
-                .build();
-
         UserEntity invitedUser = UserEntity.builder()
                 .id(1L)
                 .username(invitedUsername)
@@ -155,6 +152,11 @@ class InvitationServiceTest {
         UserEntity invitingUser = UserEntity.builder()
                 .id(2L)
                 .username(invitingAdminUsername)
+                .build();
+
+        ProjectEntity project = ProjectEntity.builder()
+                .id(projectId)
+                .admin(invitingUser)
                 .build();
 
         when(serviceHelper.findProjectByIdOrThrowException(projectId)).thenReturn(project);

@@ -3,8 +3,6 @@ package by.sirius.task.tracker.store.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +16,7 @@ import java.util.Optional;
 @Builder
 @Entity
 @Table(name = "task_states")
-public class TaskStateEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class TaskStateEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +24,12 @@ public class TaskStateEntity implements Serializable {
 
     private String name;
 
-    @OneToOne
-    private TaskStateEntity leftTaskState;
+    @OneToOne(mappedBy = "leftTaskState", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TaskStateEntity rightTaskState;
 
     @OneToOne
-    private TaskStateEntity rightTaskState;
+    @JoinColumn(name = "left_task_state_id")
+    private TaskStateEntity leftTaskState;
 
     @Builder.Default
     private Instant createdAt = Instant.now();
@@ -43,7 +39,7 @@ public class TaskStateEntity implements Serializable {
     private ProjectEntity project;
 
     @Builder.Default
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "task_state_id", referencedColumnName = "id")
     private List<TaskEntity> tasks = new ArrayList<>();
 

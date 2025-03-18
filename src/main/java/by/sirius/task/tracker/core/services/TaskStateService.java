@@ -8,6 +8,7 @@ import by.sirius.task.tracker.core.factories.TaskStateDtoFactory;
 import by.sirius.task.tracker.core.services.helpers.ServiceHelper;
 import by.sirius.task.tracker.store.entities.ProjectEntity;
 import by.sirius.task.tracker.store.entities.TaskStateEntity;
+import by.sirius.task.tracker.store.repositories.ProjectRepository;
 import by.sirius.task.tracker.store.repositories.TaskStateRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,20 +27,22 @@ public class TaskStateService {
 
     private final TaskStateRepository taskStateRepository;
     private final TaskStateDtoFactory taskStateDtoFactory;
+    private final ProjectRepository projectRepository;
 
     private final ServiceHelper serviceHelper;
 
     public TaskStateDto getTaskStateById(Long projectId, Long taskStateId) {
-        TaskStateEntity taskState = taskStateRepository.findByProjectIdAndId(projectId, taskStateId)
+        TaskStateEntity taskState = taskStateRepository.findWithTasksByProjectIdAndId(projectId, taskStateId)
                 .orElseThrow(() -> new NotFoundException("Task state not found", HttpStatus.NOT_FOUND));
 
         return taskStateDtoFactory.makeTaskStateDto(taskState);
     }
 
-    public List<TaskStateDto> getTaskStates(Long projectId) {
+    public List<TaskStateDto> getTaskStates(Long projectId, String username) {
         log.debug("Fetching task states for project ID: {}", projectId);
 
-        ProjectEntity project = serviceHelper.findProjectByIdOrThrowException(projectId);
+        ProjectEntity project = projectRepository.findWithTaskStatesByProjectIdAndAdminName(projectId ,username)
+                .orElseThrow(() -> new NotFoundException("Project not found", HttpStatus.NOT_FOUND));
 
         return project
                 .getTaskStates()
@@ -84,9 +87,7 @@ public class TaskStateService {
                     taskStateRepository.save(anotherTaskState);
                 });
 
-        final TaskStateEntity savedTaskState = taskStateRepository.save(taskState);
-
-        return taskStateDtoFactory.makeTaskStateDto(savedTaskState);
+        return taskStateDtoFactory.makeTaskStateDto(taskState);
     }
 
     @Transactional

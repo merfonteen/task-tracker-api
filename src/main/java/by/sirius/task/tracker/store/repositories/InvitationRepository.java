@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface InvitationRepository extends JpaRepository<InvitationEntity, Long> {
-    List<InvitationEntity> findAllByInvitedUserAndStatus(UserEntity user, InvitationStatus status);
-   List<InvitationEntity> findAllByInvitedUser_username(String username);
+    List<InvitationEntity> findAllByInvitedUser_username(String username);
+
     Optional<InvitationEntity> findByInvitedUserAndProjectAndStatus(UserEntity invitedUser, ProjectEntity project, InvitationStatus status);
 }

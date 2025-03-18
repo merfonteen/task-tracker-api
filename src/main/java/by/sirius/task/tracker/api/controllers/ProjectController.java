@@ -3,6 +3,7 @@ package by.sirius.task.tracker.api.controllers;
 import by.sirius.task.tracker.api.dto.AckDto;
 import by.sirius.task.tracker.api.dto.InvitationDto;
 import by.sirius.task.tracker.api.dto.ProjectDto;
+import by.sirius.task.tracker.api.dto.ProjectDtoWithTaskStates;
 import by.sirius.task.tracker.core.services.InvitationService;
 import by.sirius.task.tracker.core.services.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class ProjectController {
     public static final String SEND_INVITATION_TO_PROJECT = "/api/projects/{project_id}/invitations/send";
 
     @GetMapping(GET_PROJECT_BY_ID)
-    public ProjectDto getProjectById(@PathVariable(name = "project_id") Long projectId, Principal principal) {
+    public ProjectDtoWithTaskStates getProjectById(@PathVariable(name = "project_id") Long projectId, Principal principal) {
         return projectService.getProjectById(projectId, principal.getName());
     }
 

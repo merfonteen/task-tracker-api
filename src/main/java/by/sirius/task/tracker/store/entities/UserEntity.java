@@ -3,8 +3,6 @@ package by.sirius.task.tracker.store.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,16 +14,15 @@ import java.util.Objects;
 @Builder
 @Entity
 @Table(name = "users")
-public class UserEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(unique = true)
     private String email;
+
     private String username;
     private String password;
     private Boolean enabled;
@@ -40,7 +37,7 @@ public class UserEntity implements Serializable {
     private List<RoleEntity> roles = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProjectEntity> ownedProjects = new ArrayList<>();
 
     @Builder.Default

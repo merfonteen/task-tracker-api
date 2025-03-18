@@ -2,15 +2,16 @@ package by.sirius.task.tracker.api.dto;
 
 import by.sirius.task.tracker.store.entities.InvitationStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-
-import java.io.Serializable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class InvitationDto implements Serializable {
+public class InvitationDto {
 
     private Long id;
 

@@ -3,8 +3,6 @@ package by.sirius.task.tracker.store.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -15,10 +13,7 @@ import java.util.Objects;
 @Builder
 @Entity
 @Table(name = "invitations")
-public class InvitationEntity implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class InvitationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
